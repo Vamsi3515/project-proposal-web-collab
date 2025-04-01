@@ -6,7 +6,7 @@ exports.createReport = async (req, res) => {
 
         await pool.execute(
             "INSERT INTO reports (user_id, project_id, title, description, image_url, pdf_url, report_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [userId, projectId, title, description, imageUrl, pdfUrl, reportStatus || 'open'] // default report_status to 'open' if not provided
+            [userId, projectId, title, description, imageUrl, pdfUrl, reportStatus || 'open']
         );
 
         res.status(201).json({ message: "Report submitted successfully!" });
@@ -27,7 +27,7 @@ exports.getAllReports = async (req, res) => {
 exports.getReportById = async (req, res) => {
     try {
         const { id } = req.params;
-        const [report] = await pool.execute("SELECT * FROM reports WHERE report_id = ?", [id]); // Use 'report_id' instead of 'id'
+        const [report] = await pool.execute("SELECT * FROM reports WHERE report_id = ?", [id]);
 
         if (report.length === 0) {
             return res.status(404).json({ message: "Report not found" });
@@ -46,7 +46,7 @@ exports.updateReport = async (req, res) => {
 
         const [result] = await pool.execute(
             "UPDATE reports SET description = ?, title = ?, image_url = ?, pdf_url = ?, report_status = ? WHERE report_id = ?",
-            [description, title, imageUrl, pdfUrl, reportStatus, id] // Use 'report_id' instead of 'id'
+            [description, title, imageUrl, pdfUrl, reportStatus, id] 
         );
 
         if (result.affectedRows === 0) {
@@ -63,7 +63,7 @@ exports.deleteReport = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const [result] = await pool.execute("DELETE FROM reports WHERE report_id = ?", [id]); // Use 'report_id' instead of 'id'
+        const [result] = await pool.execute("DELETE FROM reports WHERE report_id = ?", [id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Report not found" });
