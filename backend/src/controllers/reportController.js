@@ -1,76 +1,91 @@
 const pool = require("../config/db");
 
-exports.createReport = async (req, res) => {
-    try {
-        const { userId, projectId, title, description, imageUrl, pdfUrl, reportStatus } = req.body;
-
-        await pool.execute(
-            "INSERT INTO reports (user_id, project_id, title, description, image_url, pdf_url, report_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [userId, projectId, title, description, imageUrl, pdfUrl, reportStatus || 'open']
-        );
-
-        res.status(201).json({ message: "Report submitted successfully!" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 exports.getAllReports = async (req, res) => {
-    try {
-        const [reports] = await pool.execute("SELECT * FROM reports");
-        res.json(reports);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const [reports] = await pool.query(`
+      SELECT r.*, u.name as user_name
+      FROM reports r
+      JOIN users u ON r.user_id = u.user_id
+      ORDER BY r.created_at DESC
+    `);
+    res.json({ success: true, reports });
+  } catch (err) {
+    console.error("Error getting all reports:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
-exports.getReportById = async (req, res) => {
+exports.getUserReports = async (req, res) => {
     try {
-        const { id } = req.params;
-        const [report] = await pool.execute("SELECT * FROM reports WHERE report_id = ?", [id]);
-
-        if (report.length === 0) {
-            return res.status(404).json({ message: "Report not found" });
-        }
-
-        res.json(report[0]);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+      const userId = req.user.id;
+      const [reports] = await pool.query(`
+        SELECT r.*, u.full_name as user_name
+        FROM reports r
+        JOIN users u ON r.user_id = u.user_id
+        WHERE r.user_id = ?
+        ORDER BY r.created_at DESC
+      `, [userId]);
+      res.json({ success: true, reports });
+    } catch (err) {
+      console.error("Error getting user reports:", err);
+      res.status(500).json({ success: false, message: "Server error" });
     }
+  };
+  
+exports.createReport = async (req, res) => {
+  const { title, description } = req.body;
+  const userId = req.user.id;
+
+  const image = req.files?.image?.[0]?.filename;
+  const pdf = req.files?.pdf?.[0]?.filename;
+
+  const imageUrl = image ? `/uploads/reports/${image}` : null;
+  const pdfUrl = pdf ? `/uploads/reports/${pdf}` : null;
+
+  try {
+    await pool.query(`
+      INSERT INTO reports (user_id, title, description, image_url, pdf_url)
+      VALUES (?, ?, ?, ?, ?)
+    `, [userId, title, description, imageUrl, pdfUrl]);
+
+    res.json({ success: true, message: "Report submitted successfully" });
+  } catch (err) {
+    console.error("Error creating report:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
-exports.updateReport = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { description, title, imageUrl, pdfUrl, reportStatus } = req.body;
+exports.updateReportStatus = async (req, res) => {
+  const { reportId } = req.params;
+  const { status } = req.body;
 
-        const [result] = await pool.execute(
-            "UPDATE reports SET description = ?, title = ?, image_url = ?, pdf_url = ?, report_status = ? WHERE report_id = ?",
-            [description, title, imageUrl, pdfUrl, reportStatus, id] 
-        );
+  if (!["open", "closed"].includes(status)) {
+    return res.status(400).json({ success: false, message: "Invalid status" });
+  }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Report not found or not updated" });
-        }
-
-        res.json({ message: "Report updated successfully" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    await pool.query("UPDATE reports SET report_status = ? WHERE report_id = ?", [status, reportId]);
+    res.json({ success: true, message: "Report status updated" });
+  } catch (err) {
+    console.error("Error updating report status:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
-exports.deleteReport = async (req, res) => {
-    try {
-        const { id } = req.params;
+exports.checkUserReports = async (req, res) => {
+  const userId = req.user.id;
 
-        const [result] = await pool.execute("DELETE FROM reports WHERE report_id = ?", [id]);
+  try {
+    const [rows] = await pool.query(
+      "SELECT COUNT(*) as reportCount FROM reports WHERE user_id = ?",
+      [userId]
+    );
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Report not found" });
-        }
+    const hasReports = rows[0].reportCount > 0;
 
-        res.json({ message: "Report deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.json({ hasReports });
+  } catch (error) {
+    console.error("Error checking user reports:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };

@@ -27,6 +27,7 @@ db.getConnection()
         console.error("Database Connection Failed:", err.message);
     });
 
+app.use("/uploads", express.static("uploads"));
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/payments", paymentRoutes);
