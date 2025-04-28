@@ -6,7 +6,6 @@ export default function Terms() {
   const [agreed, setAgreed] = useState(false);
   const [signature, setSignature] = useState("");
 
-  // The submit button is enabled only if a signature is provided and the checkbox is checked.
   const isSubmitEnabled = agreed && signature.trim().length > 0;
 
   const handleSubmit = (e) => {

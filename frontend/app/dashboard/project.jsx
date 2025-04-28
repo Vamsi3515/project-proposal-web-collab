@@ -51,7 +51,38 @@ export default function Dashboard() {
   const [filteredTickets, setFilteredTickets] = useState([]);
   const [hasReports, setHasReports] = useState(null);
   const [ticketStatusFilter, setTicketStatusFilter] = useState("open");
+  const [payments, setPayments] = useState([]);
+  const [filteredPayments, setFilteredPayments] = useState([]);
+
+  useEffect(() => {
+    if (activeSection === "payments") {
+      fetchPayments();
+    }
+  }, [activeSection, activeSubSection]);
+
+  const fetchPayments = async () => {
+    try {
+      const token = localStorage.getItem("token");
   
+      const endpoint =
+        activeSubSection === "past"
+          ? `${local_uri}/api/payments/history/`
+          : `${local_uri}/api/payments/pending/`;
+  
+      const response = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const payments = Array.isArray(response.data) ? response.data : [];
+
+      setPayments(payments);
+      setFilteredPayments(payments);
+        
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+    }
+  };  
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -140,38 +171,39 @@ export default function Dashboard() {
       setFilteredTickets([]);
     }
   }, [ticketStatusFilter, reports]);
+
   
 
-  const [payments, setPayments] = useState([
-    {
-      id: 1,
-      project: "AI Assistant",
-      amount: 3500,
-      date: "2025-02-15",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      project: "Web App",
-      amount: 2800,
-      date: "2025-01-30",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      project: "Blockchain Project",
-      amount: 5000,
-      date: "2025-03-10",
-      status: "Completed",
-    },
-    {
-      id: 4,
-      project: "ML Project",
-      amount: 4200,
-      date: "2025-03-28",
-      status: "Pending",
-    },
-  ]);
+  // const [payments, setPayments] = useState([
+  //   {
+  //     id: 1,
+  //     project: "AI Assistant",
+  //     amount: 3500,
+  //     date: "2025-02-15",
+  //     status: "Pending",
+  //   },
+  //   {
+  //     id: 2,
+  //     project: "Web App",
+  //     amount: 2800,
+  //     date: "2025-01-30",
+  //     status: "Completed",
+  //   },
+  //   {
+  //     id: 3,
+  //     project: "Blockchain Project",
+  //     amount: 5000,
+  //     date: "2025-03-10",
+  //     status: "Completed",
+  //   },
+  //   {
+  //     id: 4,
+  //     project: "ML Project",
+  //     amount: 4200,
+  //     date: "2025-03-28",
+  //     status: "Pending",
+  //   },
+  // ]);
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [newDomain, setNewDomain] = useState("");
@@ -296,12 +328,12 @@ export default function Dashboard() {
   //   return true;
   // });
 
-  const filteredPayments = payments.filter((payment) => {
-    if (activeSubSection === "all") return true;
-    if (activeSubSection === "past") return payment.status === "Completed";
-    if (activeSubSection === "pending") return payment.status === "Pending";
-    return true;
-  });
+  // const filteredPayments = payments.filter((payment) => {
+  //   if (activeSubSection === "all") return true;
+  //   if (activeSubSection === "past") return payment.status === "Completed";
+  //   if (activeSubSection === "pending") return payment.status === "Pending";
+  //   return true;
+  // });
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 w-full">
@@ -793,35 +825,35 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredPayments.map((payment) => (
-                    <tr key={payment.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        #{payment.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {payment.project}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        ${payment.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        {payment.date}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="flex items-center">
-                          <span
-                            className={`w-2 h-2 mr-2 rounded-full ${
-                              statusStyles[payment.status]
-                            }`}
-                          ></span>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {payment.status}
-                          </span>
+                {filteredPayments.map((payment) => (
+                  <tr key={payment.payment_id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      #{payment.payment_id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {payment.project_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      ₹{payment.total_amount.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {new Date(payment.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="flex items-center">
+                        <span
+                          className={`w-2 h-2 mr-2 rounded-full ${
+                            statusStyles[payment.payment_status]
+                          }`}
+                        ></span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {payment.payment_status}
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
               </table>
             </div>
           </div>

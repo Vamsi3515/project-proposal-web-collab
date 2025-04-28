@@ -2,25 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Terms from "./Terms";
-<<<<<<< HEAD
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-
-function generateProjectId(company = "HT") {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0"); // Ensure 2-digit month
-  const date = String(now.getDate()).padStart(2, "0"); // Ensure 2-digit date
-  const projectNumber = "001"; // You can dynamically fetch the next number from a database
-
-  return `${company}${date}${month}${year}${projectNumber}`;
-}
-=======
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { useRouter } from "next/navigation"; 
->>>>>>> be2cd04 (modified integration)
 
 export default function ProjectDetails() {
   const [projectId, setProjectId] = useState("");
@@ -29,24 +14,6 @@ export default function ProjectDetails() {
   const [description, setDescription] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [file, setFile] = useState(null);
-<<<<<<< HEAD
-
-  useEffect(() => {
-    setProjectId(generateProjectId());
-  }, []);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({
-      projectId,
-      domain,
-      name,
-      description,
-      deliveryDate,
-      file,
-    });
-  };
-=======
   const [showDialog, setShowDialog] = useState(false);
   const local_uri = "http://localhost:8000";
   const router = useRouter(); 
@@ -125,7 +92,6 @@ const token = localStorage.getItem("token");
     }
   }
 
->>>>>>> be2cd04 (modified integration)
 
   return (
     <div className="w-2xl mx-auto p-6 bg-white dark:bg-gray-900 shadow-lg rounded-md transition-colors duration-300 border dark:border-gray-700 border-gray-300">
@@ -133,30 +99,18 @@ const token = localStorage.getItem("token");
         Project Details
       </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-<<<<<<< HEAD
-        {/* Project ID (Non-editable) */}
-=======
->>>>>>> be2cd04 (modified integration)
         <div>
           <label className="block text-gray-700 dark:text-gray-200 font-medium">
             Project ID
           </label>
           <input
             type="text"
-<<<<<<< HEAD
-            value={projectId}
-=======
             value={projectId || "Loading..."}
->>>>>>> be2cd04 (modified integration)
             readOnly
             className="w-full p-2 border bg-gray-100 dark:bg-gray-800 dark:text-white rounded"
           />
         </div>
 
-<<<<<<< HEAD
-        {/* Project Domain (Dropdown) */}
-=======
->>>>>>> be2cd04 (modified integration)
         <div>
           <label className="block text-gray-700 dark:text-gray-200 font-medium">
             Project Domain
@@ -189,10 +143,6 @@ const token = localStorage.getItem("token");
           />
         </div>
 
-<<<<<<< HEAD
-        {/* Project Description */}
-=======
->>>>>>> be2cd04 (modified integration)
         <div>
           <label className="block text-gray-700 dark:text-gray-200 font-medium">
             Project Description
@@ -206,10 +156,6 @@ const token = localStorage.getItem("token");
           />
         </div>
 
-<<<<<<< HEAD
-        {/* File Upload (Optional) */}
-=======
->>>>>>> be2cd04 (modified integration)
         <div>
           <label className="block text-gray-700 dark:text-gray-200 font-medium">
             Upload Documents (Optional)
@@ -221,10 +167,6 @@ const token = localStorage.getItem("token");
           />
         </div>
 
-<<<<<<< HEAD
-        {/* Delivery Date */}
-=======
->>>>>>> be2cd04 (modified integration)
         <div>
           <label className="block text-gray-700 dark:text-gray-200 font-medium">
             Delivery Date
@@ -237,16 +179,6 @@ const token = localStorage.getItem("token");
             required
           />
         </div>
-<<<<<<< HEAD
-
-        {/* Submit Button */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Submit</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] dark:bg-gray-800 dark:text-white">
-            <Terms />
-=======
         <Button
             type="button"
             onClick={() => {
@@ -268,14 +200,9 @@ const token = localStorage.getItem("token");
             </DialogDescription>
             <Terms />
             <Button onClick={handleSubmit}>Confirm & Submit</Button>
->>>>>>> be2cd04 (modified integration)
           </DialogContent>
         </Dialog>
       </form>
     </div>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> be2cd04 (modified integration)
