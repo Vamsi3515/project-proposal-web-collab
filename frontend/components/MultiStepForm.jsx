@@ -1,11 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-<<<<<<< HEAD
-=======
 import { useRouter } from "next/navigation";
 
->>>>>>> be2cd04 (modified integration)
 
 const domains = [
   { name: "Web Development", pdf: "/pdfs/web-development.pdf" },
@@ -17,10 +14,7 @@ export default function MultiStepForm() {
   const [step, setStep] = useState(1);
   const [selectedDomain, setSelectedDomain] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-<<<<<<< HEAD
-=======
   const local_uri = "http://localhost:8000";
->>>>>>> be2cd04 (modified integration)
 
   const {
     register,
@@ -61,22 +55,6 @@ export default function MultiStepForm() {
   const prevStep = () => {
     if (step > 1) setStep(step - 1);
   };
-<<<<<<< HEAD
-
-  const onSubmit = (data) => {
-    setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Final Data:", { ...data, selectedDomain });
-      alert("Form submitted successfully!");
-      setIsSubmitting(false);
-    }, 1000);
-  };
-
-  return (
-    <div className="w-xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
-      {/* Form Header */}
-=======
   const router = useRouter(); 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -125,16 +103,11 @@ export default function MultiStepForm() {
 
   return (
     <div className="w-xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
->>>>>>> be2cd04 (modified integration)
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Student Registration</h1>
         <p className="text-gray-600 dark:text-gray-300">Complete all steps to register</p>
       </div>
 
-<<<<<<< HEAD
-      {/* Stepper UI */}
-=======
->>>>>>> be2cd04 (modified integration)
       <div className="mb-8">
         <div className="relative after:mt-4 after:block after:h-1 after:w-full after:rounded-lg after:bg-gray-200 dark:after:bg-gray-700">
           <ol className="grid grid-cols-3 gap-y-8 text-sm font-medium text-gray-500">
@@ -150,10 +123,6 @@ export default function MultiStepForm() {
                     stepIndex === 1 ? "justify-start" : stepIndex === 2 ? "justify-center" : "justify-end"
                   } ${isCompleted ? "text-green-600" : isActive ? "text-blue-600" : "text-gray-400"}`}
                 >
-<<<<<<< HEAD
-                  {/* Step indicator */}
-=======
->>>>>>> be2cd04 (modified integration)
                   <span
                     className={`absolute -bottom-[1.75rem] flex items-center justify-center w-8 h-8 rounded-full ${
                       stepIndex === 1 ? "start-0" : stepIndex === 2 ? "left-1/2 -translate-x-1/2" : "end-0"
@@ -174,10 +143,6 @@ export default function MultiStepForm() {
                     )}
                   </span>
 
-<<<<<<< HEAD
-                  {/* Label */}
-=======
->>>>>>> be2cd04 (modified integration)
                   <span className="hidden sm:block font-medium mb-4">{label}</span>
                 </li>
               );
@@ -186,16 +151,8 @@ export default function MultiStepForm() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Multi-Step Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-10">
-        {/* Content Container - Fixed Height for All Steps */}
-        <div className="min-h-96 mb-6">
-          {/* Step 1: Student Information */}
-=======
       <form onSubmit={handleSubmit(onSubmit)} className="mt-10">
         <div className="min-h-96 mb-6">
->>>>>>> be2cd04 (modified integration)
           {step === 1 && (
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
@@ -316,10 +273,6 @@ export default function MultiStepForm() {
             </div>
           )}
 
-<<<<<<< HEAD
-          {/* Step 2: College Information */}
-=======
->>>>>>> be2cd04 (modified integration)
           {step === 2 && (
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 min-h-64">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">College Information</h2>
@@ -364,10 +317,6 @@ export default function MultiStepForm() {
             </div>
           )}
 
-<<<<<<< HEAD
-          {/* Step 3: Domain Selection & PDF Download */}
-=======
->>>>>>> be2cd04 (modified integration)
           {step === 3 && (
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 min-h-64">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Resource Selection</h2>
@@ -413,10 +362,6 @@ export default function MultiStepForm() {
           )}
         </div>
 
-<<<<<<< HEAD
-        {/* Navigation Buttons */}
-=======
->>>>>>> be2cd04 (modified integration)
         <div className="flex justify-between mt-8 pt-4 border-t dark:border-gray-700">
           {step > 1 ? (
             <button 
