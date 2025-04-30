@@ -2,6 +2,8 @@ const pool = require("../config/db");
 const generateProjectCode = require("../utils/generateProjectCode");
 const nodemailer = require("nodemailer");
 const path = require("path");
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 exports.createProject = async (req, res) => {
   try {
@@ -188,4 +190,40 @@ exports.getProjectsByUser = async (req, res) => {
   } catch (error) {
       res.status(500).json({ message: error.message });
   }
+};
+
+exports.updateProjectStatus = async (req, res) => {
+  try {
+    const { projectId, status, notes } = req.body;
+
+    if (!['pending', 'approved', 'rejected', 'completed'].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    await pool.execute(
+      "UPDATE projects SET project_status = ?, admin_notes = ? WHERE project_id = ?",
+      [status, notes, projectId]
+    );
+
+    res.status(200).json({ message: "Project status updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.generateInvoice = (req, res) => {
+  const { projectId, userId, totalAmount } = req.body;
+
+  const doc = new PDFDocument();
+  doc.pipe(fs.createWriteStream(`invoices/invoice_${projectId}.pdf`));
+
+  doc.fontSize(18).text('Invoice', { align: 'center' });
+  doc.fontSize(12).text(`Project ID: ${projectId}`);
+  doc.text(`User ID: ${userId}`);
+  doc.text(`Total Amount: ${totalAmount}`);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`);
+
+  doc.end();
+
+  res.status(200).json({ message: 'Invoice generated', invoiceUrl: `/invoices/invoice_${projectId}.pdf` });
 };

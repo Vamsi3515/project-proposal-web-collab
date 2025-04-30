@@ -8,4 +8,12 @@ router.get("/pending", authenticateUser, paymentController.getPendingPayments);
 router.get("/history", authenticateUser, paymentController.getPaymentHistory);
 router.post("/confirm", authenticateUser, paymentController.confirmPayment);
 
+// Route to create payment order
+router.post('/create-payment-order', paymentController.createPaymentOrder);
+
+// Route to capture payment
+router.post('/capture-payment', paymentController.capturePayment);
+
+module.exports = router;
+
 module.exports = router;

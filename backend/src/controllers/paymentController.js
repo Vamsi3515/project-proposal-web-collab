@@ -1,3 +1,5 @@
+const Razorpay = require('razorpay');
+
 const pool = require("../config/db");
 
 exports.createPayment = async (req, res) => {
@@ -102,5 +104,58 @@ exports.confirmPayment = async (req, res) => {
   } catch (error) {
     console.error("Error confirming payment:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+exports.createPaymentOrder = async (req, res) => {
+  try {
+    const { amount, projectId } = req.body;
+    const [project] = await pool.execute("SELECT * FROM projects WHERE project_id = ?", [projectId]);
+
+    if (!project.length) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const order = await razorpay.orders.create({
+      amount: amount * 100,
+      currency: 'INR',
+      receipt: `order_${Date.now()}`,
+      notes: {
+        project_id: projectId
+      }
+    });
+
+    res.status(200).json({
+      message: "Payment order created",
+      orderId: order.id,
+      amount: amount * 100
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.capturePayment = async (req, res) => {
+  try {
+    const { paymentId, orderId, amount } = req.body;
+
+    const payment = await razorpay.payments.fetch(paymentId);
+    if (payment.status !== 'authorized') {
+      return res.status(400).json({ message: "Payment not authorized" });
+    }
+
+    const capturedPayment = await razorpay.payments.capture(paymentId, amount * 100);
+
+    await pool.execute("UPDATE payments SET payment_status = 'paid' WHERE order_id = ?", [orderId]);
+
+    res.status(200).json({ message: "Payment captured successfully", payment: capturedPayment });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
