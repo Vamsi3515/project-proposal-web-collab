@@ -1,14 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function AuthForm() {
-  const [tab, setTab] = useState("login"); 
+  const [tab, setTab] = useState("login");
   const isLogin = tab === "login";
 
-
   return (
-    <div className=" w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-[400px]">
+    <div className="w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-[400px]">
+      <Toaster position="top-right" />
       <div className="flex justify-between mb-4">
         <button
           onClick={() => setTab("login")}
@@ -24,11 +25,7 @@ export default function AuthForm() {
         </button>
       </div>
 
-      {isLogin ? (
-        <LoginForm />
-      ) : (
-        <RegisterForm />
-      )}
+      {isLogin ? <LoginForm /> : <RegisterForm />}
     </div>
   );
 }
@@ -37,13 +34,13 @@ function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const local_uri = "http://localhost:8000";
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-  
+    setLoading(true);
+
     try {
       const response = await fetch(`${local_uri}/api/users/login`, {
         method: "POST",
@@ -52,28 +49,31 @@ function LoginForm() {
         },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        setError(data.message || "Login failed");
+        toast.error(data.message || "Login failed");
         return;
       }
-  
+
       const { token, user, hasProjects } = data;
-  
+
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-  
+
+      toast.success("Login successful!");
+
       if (hasProjects) {
         router.push("/dashboard");
       } else {
         router.push("/studentdetails");
       }
-  
     } catch (err) {
       console.error("Login error:", err);
-      setError("Something went wrong. Please try again later.");
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,6 +85,7 @@ function LoginForm() {
         className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        required
       />
       <input
         type="password"
@@ -92,15 +93,27 @@ function LoginForm() {
         className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        required
       />
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-        Login
+      <button
+        type="submit"
+        disabled={loading}
+        className={`w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 flex justify-center items-center ${
+          loading ? "opacity-70 cursor-not-allowed" : ""
+        }`}
+      >
+        {loading ? (
+          <>
+            <LoadingSpinner size="sm" />
+            <span className="ml-2">Logging in...</span>
+          </>
+        ) : (
+          "Login"
+        )}
       </button>
     </form>
   );
 }
-
 
 function RegisterForm() {
   const router = useRouter();
@@ -109,10 +122,9 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [showOtpFields, setShowOtpFields] = useState(false);
-  const [showOtpMessage, setShowOtpMessage] = useState(false);
-  const [error, setError] = useState("");
   const [otpTimer, setOtpTimer] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const local_uri = "http://localhost:8000";
 
   useEffect(() => {
@@ -137,9 +149,16 @@ function RegisterForm() {
   const handleGetOtp = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
+
+    if (!email || !password) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+
+    setOtpLoading(true);
     try {
       const response = await fetch(`${local_uri}/api/users/send-otp`, {
         method: "POST",
@@ -151,37 +170,37 @@ function RegisterForm() {
         }),
       });
       const data = await response.json();
-  
+
       if (response.ok) {
         setShowOtpFields(true);
-        setShowOtpMessage(true);
-        setOtpTimer(30); 
-        console.log("OTP sent:", data.message); 
-      } else if(response.status === 400){
-        console.error("Failed to send OTP:", data.message);
-        setError(data.message);
-      }else if(response.status === 500){
-        setError("Internal Server Error! Try again later");
-      }else{
-        setError("Something went wrong! Try again");
+        setOtpTimer(30);
+        toast.success("OTP sent to your email");
+      } else if (response.status === 400) {
+        toast.error(data.message || "Failed to send OTP");
+      } else if (response.status === 500) {
+        toast.error("Internal Server Error! Try again later");
+      } else {
+        toast.error("Something went wrong! Try again");
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
+      toast.error("Failed to connect to server. Check your internet connection.");
+    } finally {
+      setOtpLoading(false);
     }
   };
-  
+
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
     const fullOtp = otp.join("");
     if (fullOtp.length < 6) {
-      setError("Enter complete 6-digit OTP.");
+      toast.error("Enter complete 6-digit OTP.");
       return;
     }
 
@@ -200,17 +219,22 @@ function RegisterForm() {
       if (res.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+        toast.success("Registration successful!");
+        
         const newUser = data.user;
         if (newUser.is_verified) {
           router.push("/studentdetails");
         }
       } else if (res.status === 400) {
-        setError(data.error || "Invalid OTP");
+        toast.error(data.error || "Invalid OTP");
+      } else {
+        toast.error("Registration failed. Please try again.");
       }
     } catch (err) {
-      setError("Internal Server Error. Please try again later.");
+      toast.error("Internal Server Error. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const isFormValid =
@@ -218,7 +242,7 @@ function RegisterForm() {
     password &&
     confirmPassword &&
     password === confirmPassword &&
-    otp.every((digit) => digit !== "");
+    (showOtpFields ? otp.every((digit) => digit !== "") : true);
 
   return (
     <form className="space-y-4" onSubmit={handleRegister}>
@@ -229,6 +253,7 @@ function RegisterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
+        disabled={loading || showOtpFields}
       />
       <input
         type="password"
@@ -237,6 +262,7 @@ function RegisterForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
+        disabled={loading || showOtpFields}
       />
       <input
         type="password"
@@ -245,27 +271,28 @@ function RegisterForm() {
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
         required
+        disabled={loading || showOtpFields}
       />
 
       {showOtpFields && (
-        <div className="flex justify-between space-x-2">
-          {otp.map((digit, idx) => (
-            <input
-              key={idx}
-              id={`otp-${idx}`}
-              type="text"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleOtpChange(e.target.value, idx)}
-              className="w-12 h-12 text-center text-lg border rounded dark:bg-gray-700 dark:text-white"
-            />
-          ))}
-        </div>
-      )}
-
-      {showOtpMessage && (
-        <div className="bg-green-100 text-green-800 p-2 rounded text-center transition-all duration-300">
-          OTP sent to the registered email address.
+        <div className="space-y-2">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Enter the 6-digit OTP sent to your email
+          </p>
+          <div className="flex justify-between space-x-2">
+            {otp.map((digit, idx) => (
+              <input
+                key={idx}
+                id={`otp-${idx}`}
+                type="text"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(e.target.value, idx)}
+                className="w-12 h-12 text-center text-lg border rounded dark:bg-gray-700 dark:text-white"
+                disabled={loading}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -281,29 +308,57 @@ function RegisterForm() {
         <button
           type="button"
           onClick={handleGetOtp}
-          className="w-full dark:bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 bg-yellow-300"
+          disabled={otpLoading || !email || !password || password !== confirmPassword}
+          className={`w-full py-2 rounded flex justify-center items-center ${
+            otpLoading || !email || !password || password !== confirmPassword
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-yellow-500 hover:bg-yellow-600 text-white"
+          }`}
         >
-          {showOtpFields ? "Resend OTP" : "Get OTP"}
+          {otpLoading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span className="ml-2">{showOtpFields ? "Resending OTP..." : "Sending OTP..."}</span>
+            </>
+          ) : (
+            <>{showOtpFields ? "Resend OTP" : "Get OTP"}</>
+          )}
         </button>
       )}
 
-      {error && (
-        <div className="bg-red-100 text-red-800 p-2 rounded text-center transition-all duration-300">
-          {error}
-        </div>
+      {showOtpFields && (
+        <button
+          type="submit"
+          disabled={!isFormValid || loading}
+          className={`w-full py-2 rounded flex justify-center items-center ${
+            isFormValid && !loading
+              ? "bg-green-500 hover:bg-green-600 text-white"
+              : "bg-gray-400 text-white cursor-not-allowed"
+          }`}
+        >
+          {loading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span className="ml-2">Registering...</span>
+            </>
+          ) : (
+            "Register"
+          )}
+        </button>
       )}
-
-      <button
-        type="submit"
-        disabled={!isFormValid || loading}
-        className={`w-full py-2 rounded ${
-          isFormValid && !loading
-            ? "bg-green-500 hover:bg-green-600 text-white"
-            : "bg-gray-400 text-white cursor-not-allowed"
-        }`}
-      >
-        {loading ? "Registering..." : "Register"}
-      </button>
     </form>
+  );
+}
+
+// Reusable loading spinner component
+function LoadingSpinner({ size = "md" }) {
+  const sizeClasses = {
+    sm: "w-4 h-4",
+    md: "w-6 h-6",
+    lg: "w-8 h-8",
+  };
+
+  return (
+    <div className={`animate-spin rounded-full border-t-2 border-b-2 border-white ${sizeClasses[size]}`}></div>
   );
 }

@@ -32,28 +32,34 @@ exports.getUserReports = async (req, res) => {
     }
   };
   
-exports.createReport = async (req, res) => {
-  const { title, description } = req.body;
-  const userId = req.user.id;
-
-  const image = req.files?.image?.[0]?.filename;
-  const pdf = req.files?.pdf?.[0]?.filename;
-
-  const imageUrl = image ? `/uploads/reports/${image}` : null;
-  const pdfUrl = pdf ? `/uploads/reports/${pdf}` : null;
-
-  try {
-    await pool.query(`
-      INSERT INTO reports (user_id, title, description, image_url, pdf_url)
-      VALUES (?, ?, ?, ?, ?)
-    `, [userId, title, description, imageUrl, pdfUrl]);
-
-    res.json({ success: true, message: "Report submitted successfully" });
-  } catch (err) {
-    console.error("Error creating report:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
+  exports.createReport = async (req, res) => {
+    const { title, description } = req.body;
+    const userId = req.user.id;
+  
+    const image = req.files?.image?.[0]?.filename;
+    const pdf = req.files?.pdf?.[0]?.filename;
+  
+    const imageUrl = image ? `/uploads/reports/${image}` : null;
+    const pdfUrl = pdf ? `/uploads/reports/${pdf}` : null;
+  
+    try {
+      const [insertResult] = await pool.query(`
+        INSERT INTO reports (user_id, title, description, image_url, pdf_url)
+        VALUES (?, ?, ?, ?, ?)
+      `, [userId, title, description, imageUrl, pdfUrl]);
+  
+      const insertedId = insertResult.insertId;
+  
+      const [reportRows] = await pool.query(`
+        SELECT * FROM reports WHERE report_id = ?
+      `, [insertedId]);
+  
+      res.status(201).json({ success: true, report: reportRows[0] });
+    } catch (err) {
+      console.error("Error creating report:", err);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  };  
 
 exports.updateReportStatus = async (req, res) => {
   const { reportId } = req.params;

@@ -159,3 +159,34 @@ exports.capturePayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getUserDashboardPayments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [payments] = await pool.execute(
+      `SELECT 
+         p.payment_id,
+         p.project_id,
+         pr.project_name,
+         pr.project_code,
+         pr.domain,
+         p.total_amount,
+         p.paid_amount,
+         p.pending_amount,
+         p.payment_status,
+         p.created_at,
+         p.updated_at
+       FROM payments p
+       JOIN projects pr ON p.project_id = pr.project_id
+       WHERE p.user_id = ?
+       ORDER BY p.created_at DESC`,
+      [userId]
+    );
+
+    res.status(200).json({ success: true, payments });
+  } catch (error) {
+    console.error("Error fetching user dashboard payments:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

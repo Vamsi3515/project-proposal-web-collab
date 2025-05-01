@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 
 const domains = [
@@ -37,24 +38,54 @@ export default function MultiStepForm() {
 
   const validateStep = async () => {
     let valid = false;
+    
     if (step === 1) {
       valid = await trigger("students");
+      if (!valid) {
+        toast.error("Please fill all required student details correctly.");
+      }
     } else if (step === 2) {
       valid = await trigger("college");
+      if (!valid) {
+        toast.error("Please complete the college information correctly.");
+      }
     } else if (step === 3) {
       valid = !!selectedDomain;
+      if (!valid) {
+        toast.error("Please select a study material domain before submitting.");
+      }
     }
+    
     return valid;
   };
-
+  
   const nextStep = async () => {
+    setIsLoading(true);
     const isValid = await validateStep();
-    if (isValid && step < 3) setStep(step + 1);
+    
+    if (isValid && step < 3) {
+      setTransitionDirection("next");
+      // Small delay to show loading state
+      setTimeout(() => {
+        setStep(step + 1);
+        setIsLoading(false);
+      }, 400);
+    } else {
+      setIsLoading(false);
+    }
   };
 
   const prevStep = () => {
-    if (step > 1) setStep(step - 1);
+    setIsLoading(true);
+    setTransitionDirection("prev");
+    
+    // Small delay to show loading state
+    setTimeout(() => {
+      if (step > 1) setStep(step - 1);
+      setIsLoading(false);
+    }, 400);
   };
+
   const router = useRouter(); 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -64,6 +95,8 @@ export default function MultiStepForm() {
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const response = await fetch(`${local_uri}/api/users/submit-multistep-data`, {
         method: "POST",
         headers: {
@@ -88,14 +121,14 @@ export default function MultiStepForm() {
         console.log("Server Response:", result);
         router.push("/project-details");
       }else if (response.status === 401) {
-        alert("Session expired. Please log in again.");
+        toast.error("Session expired. Please log in again.");
         router.push("/");
       } else {
-        alert(result.error || "Failed to submit form");
+        toast.error(result.error || "Failed to submit form");
       }
     } catch (error) {
       console.error("Form Submission Error:", error);
-      alert("An error occurred during submission");
+      toast.error("An error occurred during submission");
     } finally {
       setIsSubmitting(false);
     }
@@ -260,10 +293,16 @@ export default function MultiStepForm() {
 
               {fields.length < 10 && (
                 <button
-                  type="button"
-                  onClick={() => append({ name: "", rollNo: "", branch: "", email: "", phone: "" })}
-                  className="w-full py-2 px-4 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors flex items-center justify-center gap-2"
-                >
+                type="button"
+                onClick={() => {
+                  const container = document.querySelector('.custom-scrollbar');
+                  append({ name: "", rollNo: "", branch: "", email: "", phone: "" });
+                  setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                  }, 10);
+                }}
+                className="w-full py-2 px-4 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors flex items-center justify-center gap-2 hover:shadow-sm"
+              >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"></path>
                   </svg>

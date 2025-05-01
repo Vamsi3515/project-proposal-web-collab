@@ -13,5 +13,9 @@ router.patch("/projects/:id/status", adminController.updateProjectStatus);
 router.patch("/projects/:id/price", adminController.setProjectPrice);
 router.get("/reports", authorizeAdmin, adminController.getAllReports);
 router.get("/payments", authorizeAdmin, adminController.getAllPayments);
+router.post('/projects/approve/:projectId', authorizeAdmin, adminController.approveProject);
+router.post("/projects/reject/:projectId", authorizeAdmin, adminController.rejectProject);
+router.post('/reports/close/:reportId', authorizeAdmin, adminController.closeReport);
+router.delete('/reports/:reportId', authorizeAdmin, adminController.deleteReport);
 
 module.exports = router;

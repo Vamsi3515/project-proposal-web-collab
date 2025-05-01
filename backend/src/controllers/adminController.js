@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require("../config/db");
+const nodemailer = require("nodemailer");
 
 exports.loginAdmin = async (req, res) => {
     try {
@@ -109,5 +110,158 @@ exports.getAllPayments = async (req, res) => {
       res.status(200).json(payments);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch payments: " + error.message });
+    }
+  };  
+
+  exports.approveProject = async (req, res) => {
+    const { projectId, price } = req.body;
+
+    if (!projectId || !price) {
+    return res.status(400).json({ message: "projectId and totalAmount are required." });
+    }
+
+    try {
+      const [[project]] = await pool.execute(
+        `SELECT p.project_name, u.email, p.user_id
+         FROM projects p
+         JOIN users u ON p.user_id = u.user_id
+         WHERE p.project_id = ?`,
+        [projectId]
+      );
+  
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+  
+      await pool.execute(
+        `UPDATE projects SET project_status = 'approved' WHERE project_id = ?`,
+        [projectId]
+      );
+  
+      await pool.execute(
+        `INSERT INTO payments (project_id, user_id, total_amount, paid_amount, payment_status)
+         VALUES (?, ?, ?, 0, 'pending')
+         ON DUPLICATE KEY UPDATE total_amount = ?, payment_status = 'pending'`,
+        [projectId, project.user_id, price, price]
+      );      
+  
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+  
+      await transporter.sendMail({
+        from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+        to: project.email,
+        subject: "Your project has been approved!",
+        html: `
+          <h2>Hi,</h2>
+          <p>Your project <strong>${project.project_name}</strong> has been approved!</p>
+          <p>The total cost for your project is <strong>₹${price}</strong>.</p>
+          <p>Please make the payment to begin the development.</p>
+          <p>Thank you!</p>
+        `,
+      });
+  
+      res.status(200).json({ message: "Project approved and email sent." });
+    } catch (error) {
+      console.error("Approve Project Error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };  
+
+  exports.rejectProject = async (req, res) => {
+    const { projectId, reason } = req.body;
+  
+    if (!projectId || !reason) {
+      return res.status(400).json({ message: "projectId and reason are required." });
+    }
+  
+    try {
+      const [[project]] = await pool.execute(
+        `SELECT p.project_name, u.email 
+         FROM projects p 
+         JOIN users u ON p.user_id = u.user_id 
+         WHERE p.project_id = ?`,
+        [projectId]
+      );
+  
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+  
+      await pool.execute(
+        `UPDATE projects SET project_status = 'rejected', admin_notes = ? WHERE project_id = ?`,
+        [reason, projectId]
+      );
+  
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+  
+      await transporter.sendMail({
+        from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+        to: project.email,
+        subject: "Your project has been rejected",
+        html: `
+          <h2>Hi,</h2>
+          <p>Your project <strong>${project.project_name}</strong> has been rejected.</p>
+          <p><strong>Reason:</strong> ${reason}</p>
+          <p>You can contact us for further clarification or submit a new request.</p>
+        `,
+      });
+  
+      res.status(200).json({ message: "Project rejected and email sent." });
+  
+    } catch (error) {
+      console.error("Reject Project Error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };  
+
+  exports.closeReport = async (req, res) => {
+    const { reportId } = req.params;
+  
+    try {
+      const [result] = await pool.execute(
+        `UPDATE reports SET report_status = 'closed' WHERE report_id = ?`,
+        [reportId]
+      );
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+  
+      res.status(200).json({ message: "Report closed successfully." });
+    } catch (error) {
+      console.error("Close Report Error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+  
+  exports.deleteReport = async (req, res) => {
+    const { reportId } = req.params;
+  
+    try {
+      const [result] = await pool.execute(
+        `DELETE FROM reports WHERE report_id = ?`,
+        [reportId]
+      );
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+  
+      res.status(200).json({ message: "Report deleted successfully." });
+    } catch (error) {
+      console.error("Delete Report Error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   };  

@@ -4,7 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-export default function ReportIssue() {
+export default function ReportIssue({ onSuccess }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
@@ -31,6 +31,8 @@ export default function ReportIssue() {
         setTitle("");
         setDescription("");
         setFile(null);
+  
+        if (onSuccess) onSuccess(res.data.report);
       } else {
         toast.error("Failed to report issue");
       }

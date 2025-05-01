@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft, Grid, BarChart2, CreditCard, Search, Bell, User, Menu, X, Check, AlertCircle, RefreshCw } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Main Dashboard Component
 export default function AdminDashboard() {
@@ -133,9 +134,9 @@ export default function AdminDashboard() {
       case 'dashboard':
         return <DashboardContent isLoading={isLoading} projects={projects} reports={reports} payments={payments} setActiveSection={setActiveSection} />;
       case 'projects':
-        return <ProjectsContent isLoading={isLoading} projects={filteredProjects} setActiveSection={setActiveSection} />;
+        return <ProjectsContent isLoading={isLoading} projects={filteredProjects} setActiveSection={setActiveSection} setProjects={setProjects} />;
       case 'reports':
-        return <ReportsContent isLoading={isLoading} reports={filteredReports} setActiveSection={setActiveSection} />;
+        return <ReportsContent isLoading={isLoading} reports={filteredReports} setActiveSection={setActiveSection} setReports={setReports} />;
       case 'payments':
         return <PaymentsContent 
           isLoading={isLoading} 
@@ -383,15 +384,6 @@ const DashboardContent = ({ isLoading, projects, reports, payments, setActiveSec
                 <td className="px-6 py-4 whitespace-nowrap">
                   <StatusBadge status={project.project_status} />
                 </td>
-                {/* <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: `${project.completion || 0}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-500 mt-1">{project.completion || 0}%</span>
-                </td> */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   {project.domain}
                 </td>
@@ -460,10 +452,94 @@ const DashboardContent = ({ isLoading, projects, reports, payments, setActiveSec
 };
 
 // Projects Content Component
-const ProjectsContent = ({ isLoading, projects }) => {
+const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) => {
   if (isLoading) {
     return <LoadingState />;
   }
+
+  const local_uri = "http://localhost:8000";
+
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const response = await axios.get(`${local_uri}/api/admin/projects`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProjects(response.data);
+      localStorage.setItem("projects", JSON.stringify(response.data));
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
+
+  const handleApprove = async (projectId) => {
+    const price = prompt("Enter the price for this project:");
+    const local_uri = "http://localhost:8000";
+    const token = localStorage.getItem("adminToken");
+  
+    if (!price || isNaN(price)) {
+      alert("Please enter a valid amount.");
+      return;
+    }
+  
+    try {
+      const res = await fetch(`${local_uri}/api/admin/projects/approve/${projectId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ projectId, price })
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Project approved successfully and mail sent!");
+        fetchProjects();
+      } else {
+        toast.error("Something went wrong");
+        console.log("Error: " + data.message);
+      }
+    } catch (err) {
+      alert("Approval failed: " + err.message);
+    }
+  };
+
+  const handleReject = async (projectId) => {
+    const reason = prompt("Enter the reason for rejecting this project:");
+    const local_uri = "http://localhost:8000";
+    const token = localStorage.getItem("adminToken");
+  
+    if (!reason) {
+      alert("Rejection reason is required.");
+      return;
+    }
+  
+    try {
+      const res = await fetch(`${local_uri}/api/admin/projects/reject/${projectId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ projectId, reason }),
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Project rejected and mail sent!");
+        fetchProjects();
+      } else {
+        toast.error("Failed to Reject Project")
+        console.log("Error: " + data.message);
+      }
+    } catch (err) {
+      toast.error("Failed to Reject Project")
+      console.log("Rejection failed: " + err.message);
+    }
+  };
   
   return (
     <div className="bg-white rounded-lg shadow">
@@ -477,7 +553,6 @@ const ProjectsContent = ({ isLoading, projects }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion</th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -491,19 +566,26 @@ const ProjectsContent = ({ isLoading, projects }) => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusBadge status={project.project_status || "No Status"} />
                   </td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className="bg-blue-600 h-2.5 rounded-full" 
-                        style={{ width: `${project.completion || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-gray-500 mt-1">{project.completion || "0"}%</span>
-                  </td> */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(project.delivery_date).toLocaleDateString('en-GB') || "No Due Date"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                    <button className="text-red-600 hover:text-red-900">Delete</button>
+                    <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                    <button className="text-red-600 hover:text-red-900 mr-3">Delete</button>
+                    {project.project_status === 'pending' && (
+                      <>
+                        <button 
+                          onClick={() => handleApprove(project.project_id)} 
+                          className="text-green-600 hover:text-green-900 ml-3"
+                        >
+                          Approve
+                        </button>
+                        <button 
+                          onClick={() => handleReject(project.project_id)} 
+                          className="text-yellow-600 hover:text-yellow-900 ml-3"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))
@@ -522,10 +604,80 @@ const ProjectsContent = ({ isLoading, projects }) => {
 };
 
 // Reports Content Component
-const ReportsContent = ({ isLoading, reports }) => {
+const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) => {
   if (isLoading) {
     return <LoadingState />;
   }
+
+  const local_uri = "http://localhost:8000";
+
+  const fetchReports = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const response = await axios.get(`${local_uri}/api/admin/reports`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setReports(response.data);
+      localStorage.setItem("reports", JSON.stringify(response.data));
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    }
+  };
+
+  const handleCloseReport = async (reportId, reportName) => {
+    const confirmDelete = window.confirm(`Are you sure you want to close ${reportName} report?`);
+    if (!confirmDelete) return;
+    const token = localStorage.getItem("adminToken");
+    try {
+      const res = await fetch(`${local_uri}/api/admin/reports/close/${reportId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Report closed successfully.");
+        fetchReports();
+      } else {
+        toast.error("Failed to Close Report")
+        console.log("Error: " + data.message);
+      }
+    } catch (err) {
+      toast.error("Failed to Close Report")
+      console.log("Close failed: " + err.message);
+    }
+  };
+  
+  const handleDeleteReport = async (reportId, reportName) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${reportName} report?`);
+    if (!confirmDelete) return;
+  
+    const token = localStorage.getItem("adminToken");
+    try {
+      const res = await fetch(`${local_uri}/api/admin/reports/${reportId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Report deleted successfully.");
+        fetchReports();
+      } else {
+        toast.error("Failed to Delete Report")
+        console.log("Error: " + data.message);
+      }
+    } catch (err) {
+      toast.error("Failed to Delete Report")
+      console.log("Delete failed: " + err.message);
+    }
+  };  
   
   return (
     <div className="bg-white rounded-lg shadow">
@@ -538,9 +690,8 @@ const ReportsContent = ({ isLoading, reports }) => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated Date</th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Downloads</th> */}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -550,17 +701,21 @@ const ReportsContent = ({ isLoading, reports }) => {
                 <tr key={report.report_id || index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.report_id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.title}</td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {report.type}
-                    </span>
-                  </td> */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(report.created_at).toLocaleDateString('en-GB')}</td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.downloads}</td> */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge status={report.report_status || "No Status"} />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button className="text-green-600 hover:text-green-900 mr-3">View</button>
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Close</button>
-                    <button className="text-red-600 hover:text-red-900">Delete</button>
+                    {report.report_status === 'open' && (
+                      <button
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        onClick={() => handleCloseReport(report.report_id, report.title)}
+                      >
+                        Close
+                      </button>
+                    )}
+                    <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteReport(report.report_id, report.title)}>Delete</button>
                   </td>
                 </tr>
               ))
@@ -602,6 +757,7 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refund Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -611,7 +767,7 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
               payments.map((payment, index) => (
                 <tr key={payment.payment_id || index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{payment.payment_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_code}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ₹{isNaN(payment.total_amount) ? "0.00" : Number(payment.total_amount).toFixed(2)}
@@ -624,6 +780,9 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ₹{isNaN(payment.paid_amount) ? "0.00" : Number(payment.pending_amount).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ₹{isNaN(payment.refund_amt) ? "0.00" : Number(payment.refund_amt).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(payment.created_at).toLocaleDateString('en-GB')}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -677,9 +836,21 @@ const StatusBadge = ({ status }) => {
       bgColor = 'bg-green-100';
       textColor = 'text-green-800';
       break;
+    case 'open':
+      bgColor = 'bg-green-100';
+      textColor = 'text-green-800';
+      break;
     case 'pending':
       bgColor = 'bg-yellow-100';
       textColor = 'text-yellow-800';
+      break;
+    case 'partially_paid':
+      bgColor = 'bg-yellow-100';
+      textColor = 'text-yellow-800';
+      break;
+    case 'closed':
+      bgColor = 'bg-red-100';
+      textColor = 'text-red-800';
       break;
     case 'rejected':
       bgColor = 'bg-red-100';
@@ -703,17 +874,21 @@ const PaymentStatusBadge = ({ status }) => {
   let icon = null;
   
   switch (status) {
-    case 'Completed':
+    case 'paid':
       bgColor = 'bg-green-100';
       textColor = 'text-green-800';
       icon = <Check size={12} className="mr-1" />;
       break;
-    case 'Processing':
+    case 'partially_paid':
       bgColor = 'bg-blue-100';
       textColor = 'text-blue-800';
       icon = <RefreshCw size={12} className="mr-1 animate-spin" />;
       break;
-    case 'Refunded':
+    case 'pending':
+      bgColor = 'bg-yellow-100';
+      textColor = 'text-yellow-800';
+      break;
+    case 'refunded':
       bgColor = 'bg-red-100';
       textColor = 'text-red-800';
       icon = <AlertCircle size={12} className="mr-1" />;

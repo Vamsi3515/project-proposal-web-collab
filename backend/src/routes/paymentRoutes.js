@@ -3,6 +3,8 @@ const router = express.Router();
 const paymentController = require("../controllers/paymentController");
 const authenticateUser = require("../middlewares/authMiddleware");
 
+
+router.get("/all", authenticateUser, paymentController.getUserDashboardPayments);
 router.post("/create", authenticateUser, paymentController.createPayment);
 router.get("/pending", authenticateUser, paymentController.getPendingPayments);
 router.get("/history", authenticateUser, paymentController.getPaymentHistory);

@@ -25,10 +25,10 @@ import {
   Pencil,
   X,
   Search,
-  ChevronDown,
   Filter,
   CircleDollarSign,
   TicketCheck,
+  LogOutIcon,
 } from "lucide-react";
 import ReportIssue from "../report-issue/reportform";
 import ProjectDetails from "../project-details/projectform";
@@ -37,111 +37,91 @@ import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from "react-toastify";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState("projects");
-  const [activeSubSection, setActiveSubSection] = useState("all");
   const [isMobile, setIsMobile] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const local_uri = "http://localhost:8000";
   const [reports, setReports] = useState([]);
   const [filteredTickets, setFilteredTickets] = useState([]);
-  const [hasReports, setHasReports] = useState(null);
-  const [ticketStatusFilter, setTicketStatusFilter] = useState("open");
   const [payments, setPayments] = useState([]);
   const [filteredPayments, setFilteredPayments] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [newDomain, setNewDomain] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [showNewProject, setShowNewProject] = useState(false);
+  const [showReportIssue, setShowReportIssue] = useState(false);
+  
+  const handleLogout = () => {
+    // Example: Clear user token or session storage
+    localStorage.removeItem("token");
+
+    // Redirect to home page
+    router.push("/");
+  };
+
+  // Function to fetch projects
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(`${local_uri}/api/projects/user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const userProjects = response.data.map(project => ({
+        id: project.project_id,
+        name: project.project_name,
+        status: project.project_status,
+        domain: project.domain,
+        ...project
+      }));
+
+      setProjects(userProjects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Failed to fetch projects");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (activeSection === "payments") {
       fetchPayments();
     }
-  }, [activeSection, activeSubSection]);
+  }, [activeSection]);
 
   const fetchPayments = async () => {
     try {
       const token = localStorage.getItem("token");
   
-      const endpoint =
-        activeSubSection === "past"
-          ? `${local_uri}/api/payments/history/`
-          : `${local_uri}/api/payments/pending/`;
-  
-      const response = await axios.get(endpoint, {
+      const response = await axios.get(`${local_uri}/api/payments/all/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      const payments = Array.isArray(response.data) ? response.data : [];
-
-      setPayments(payments);
-      setFilteredPayments(payments);
-        
+      const allPayments = Array.isArray(response.data.payments) ? response.data.payments : [];
+      setPayments(allPayments);
+      setFilteredPayments(allPayments);
+  
     } catch (error) {
       console.error("Error fetching payments:", error);
     }
   };  
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const token = localStorage.getItem("token");
-  
-        const response = await axios.get(`${local_uri}/api/projects/user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
-        const userProjects = response.data.map(project => ({
-          id: project.project_id,
-          name: project.project_name,
-          status: project.project_status,
-          domain: project.domain,
-          ...project
-        }));
-  
-        setProjects(userProjects);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
     fetchProjects();
   }, []);
   
-
-  // const [tickets, setTickets] = useState([
-  //   {
-  //     id: 1,
-  //     title: "Fix login bug",
-  //     project: "AI Assistant",
-  //     status: "Open",
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Update documentation",
-  //     project: "Web App",
-  //     status: "Open",
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Performance optimization",
-  //     project: "Blockchain Project",
-  //     status: "Closed",
-  //   },
-  //   {
-  //     id: 4,
-  //     title: "Security audit",
-  //     project: "ML Project",
-  //     priority: "Critical",
-  //     status: "Closed",
-  //   },
-  // ]);
-
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -151,64 +131,18 @@ export default function Dashboard() {
             Authorization: `Bearer ${token}`
           }
         });
-        setReports(res.data.reports);
+        const allReports = Array.isArray(res.data.reports) ? res.data.reports : [];
+        setReports(allReports);
+        setFilteredTickets(allReports);
       } catch (err) {
         console.error('Failed to fetch reports:', err);
       }
     };
   
-    fetchReports();
-  }, []);
-  
-
-  useEffect(() => {
-    if (Array.isArray(reports)) {
-      const filtered = reports.filter(
-        (report) => report.report_status === ticketStatusFilter
-      );
-      setFilteredTickets(filtered);
-    } else {
-      setFilteredTickets([]);
+    if (activeSection === "reports") {
+      fetchReports();
     }
-  }, [ticketStatusFilter, reports]);
-
-  
-
-  // const [payments, setPayments] = useState([
-  //   {
-  //     id: 1,
-  //     project: "AI Assistant",
-  //     amount: 3500,
-  //     date: "2025-02-15",
-  //     status: "Pending",
-  //   },
-  //   {
-  //     id: 2,
-  //     project: "Web App",
-  //     amount: 2800,
-  //     date: "2025-01-30",
-  //     status: "Completed",
-  //   },
-  //   {
-  //     id: 3,
-  //     project: "Blockchain Project",
-  //     amount: 5000,
-  //     date: "2025-03-10",
-  //     status: "Completed",
-  //   },
-  //   {
-  //     id: 4,
-  //     project: "ML Project",
-  //     amount: 4200,
-  //     date: "2025-03-28",
-  //     status: "Pending",
-  //   },
-  // ]);
-
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [newDomain, setNewDomain] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  }, [activeSection]);
   
   useEffect(() => {
     const checkMobile = () => {
@@ -224,11 +158,6 @@ export default function Dashboard() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   router.push("/project-details");
-  // };
 
   const handleEditClick = (project) => {
     setSelectedProject(project);
@@ -266,77 +195,74 @@ export default function Dashboard() {
     }
   };  
   
-  const changeSection = (section, subSection = "all") => {
+  const changeSection = (section) => {
     setActiveSection(section);
-    setActiveSubSection(subSection);
+    setShowNewProject(false);
+    setShowReportIssue(false);
   };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // const statusStyles = {
-  //   "Pending Acceptance": "bg-yellow-500",
-  //   "Accepted & Payment Pending": "bg-blue-500",
-  //   "Payment Completed": "bg-green-500",
-  //   Rejected: "bg-red-500",
-  //   Open: "bg-green-500",
-  //   Closed: "bg-orange-500",
-  //   Pending: "bg-yellow-500",
-  //   Completed: "bg-green-500",
-  // };
+  // Handler for project addition completion
+  const handleProjectAdded = () => {
+    setShowNewProject(false);
+    fetchProjects(); // Refresh projects after adding
+    toast.success("Project added successfully!");
+  };
 
-  const statusStyles = {
-    "Pending Acceptance": "bg-yellow-400",
-    "Accepted & Payment Pending": "bg-blue-500",
-    "Payment Completed": "bg-green-500",
-    "Rejected": "bg-red-500",
-    "Approved": "bg-blue-600",
-    "Pending": "bg-yellow-500",
-    "Completed": "bg-green-600",
-    "Open": "bg-green-500",
-    "Closed": "bg-orange-500",
-  };  
+ //colors decllaration for status
+  const getStatusStyle = (status) => {
+    switch(status) {
+      case "accepted & payment pending":
+        return "bg-blue-500";
+      case "payment completed":
+        return "bg-green-500";
+      case "rejected":
+        return "bg-red-500";
+      case "approved":
+        return "bg-blue-600";
+      case "partially_paid":
+        return "bg-yellow-500";
+      case "pending":
+        return "bg-orange-500";
+      case "completed":
+        return "bg-green-600";
+      case "paid":
+        return "bg-green-600";
+      case "done":
+        return "bg-green-600";
+      case "open":
+        return "bg-green-500";
+      case "closed":
+        return "bg-orange-500";
+      default:
+        return "bg-gray-400";
+    }
+  };
 
-  // const priorityStyles = {
-  //   Low: "bg-blue-100 text-blue-800",
-  //   Medium: "bg-yellow-100 text-yellow-800",
-  //   High: "bg-orange-100 text-orange-800",
-  //   Critical: "bg-red-100 text-red-800",
-  // };
-
-  // Filter projects based on search and status
+  // Filter projects based on search and status for rendering
   const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.domain.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (activeSubSection === "all") return matchesSearch;
-    if (activeSubSection === "accepted")
-      return matchesSearch && project.status.includes("Accepted");
-    if (activeSubSection === "rejected")
-      return matchesSearch && project.status === "Rejected";
-
-    return matchesSearch;
+    const matchesSearch = 
+      project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.domain?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
-  
-  // Filter tickets based on status
-  // const filteredTickets = tickets.filter((ticket) => {
-  //   if (activeSubSection === "all") return true;
-  //   if (activeSubSection === "open") return ticket.status === "Open";
-  //   if (activeSubSection === "closed") return ticket.status === "Closed";
-  //   return true;
-  // });
 
-  // const filteredPayments = payments.filter((payment) => {
-  //   if (activeSubSection === "all") return true;
-  //   if (activeSubSection === "past") return payment.status === "Completed";
-  //   if (activeSubSection === "pending") return payment.status === "Pending";
-  //   return true;
-  // });
+  const formatStatus = (status) => {
+    if (status === "partially_paid") return "Partially Paid";
+    if (status === "paid") return "Paid";
+    if (status === "pending") return "Pending";
+    return status;
+  };  
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 w-full">
+      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-800 shadow transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -357,7 +283,7 @@ export default function Dashboard() {
         </div>
 
         <nav className="mt-4">
-          {/* Projects Section */}
+          {/* Projects Section - No subsections */}
           <div
             className={`mb-1 ${
               activeSection === "projects" ? "bg-blue-50 dark:bg-gray-700" : ""
@@ -374,44 +300,9 @@ export default function Dashboard() {
               <Filter size={18} className="mr-2" />
               <span>Projects</span>
             </button>
-
-            {activeSection === "projects" && (
-              <div className="pl-8 pr-3 py-2 space-y-1">
-                <button
-                  onClick={() => changeSection("projects", "all")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "all"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  All Projects
-                </button>
-                <button
-                  onClick={() => changeSection("projects", "accepted")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "accepted"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Accepted
-                </button>
-                <button
-                  onClick={() => changeSection("projects", "rejected")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "rejected"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Rejected
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Reports Section */}
+          {/* Reports Section - No subsections */}
           <div
             className={`mb-1 ${
               activeSection === "reports" ? "bg-blue-50 dark:bg-gray-700" : ""
@@ -428,35 +319,9 @@ export default function Dashboard() {
               <TicketCheck size={18} className="mr-2" />
               <span>Reports</span>
             </button>
-
-            {activeSection === "reports" && (
-              <div className="pl-8 pr-3 py-2 space-y-1">
-                <button
-                  onClick={() => changeSection("reports", "open")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "open"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Open Tickets
-                </button>
-
-                <button
-                  onClick={() => changeSection("reports", "closed")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "closed"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Closed Tickets
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Payments Section */}
+          {/* Payments Section - No subsections */}
           <div
             className={`mb-1 ${
               activeSection === "payments" ? "bg-blue-50 dark:bg-gray-700" : ""
@@ -473,31 +338,6 @@ export default function Dashboard() {
               <CircleDollarSign size={18} className="mr-2" />
               <span>Payments</span>
             </button>
-
-            {activeSection === "payments" && (
-              <div className="pl-8 pr-3 py-2 space-y-1">
-                <button
-                  onClick={() => changeSection("payments", "past")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "past"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Past Payments
-                </button>
-                <button
-                  onClick={() => changeSection("payments", "pending")}
-                  className={`w-full text-left px-3 py-2 text-sm rounded ${
-                    activeSubSection === "pending"
-                      ? "bg-blue-100 dark:bg-gray-600 text-blue-700 dark:text-blue-100"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Pending
-                </button>
-              </div>
-            )}
           </div>
         </nav>
       </div>
@@ -519,18 +359,18 @@ export default function Dashboard() {
               {activeSection === "projects" && "Project Dashboard"}
               {activeSection === "reports" && "Ticket Reports"}
               {activeSection === "payments" && "Payment Management"}
-            
             </h1>
-           
           </div>
-          <span className="relative -top-7"><ThemeToggle/></span>
+          <span className="relative -top-9"><ThemeToggle/></span>
+          <Button onClick={handleLogout}><LogOutIcon/>Logout</Button>
         </div>
 
+        {/* Projects Section */}
         {activeSection === "projects" && (
           <div className="p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
               <button
-                onClick={() => changeSection("projects", "newproject")}
+                onClick={() => setShowNewProject(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Add New Project
@@ -559,247 +399,210 @@ export default function Dashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Status</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {activeSubSection === "newproject" ? (
-                <ProjectDetails />
-           
+            {showNewProject ? (
+              <ProjectDetails onProjectAdded={handleProjectAdded} />
             ) : loading ? (
               <div className="flex justify-center items-center h-60">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500 border-solid"></div>
               </div>
-            ) :(
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="relative p-4 shadow-lg rounded-lg bg-white dark:bg-gray-800"
-                  >
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {project.name}
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      Domain: {project.domain}
-                    </p>
-                    <div className="flex items-center mb-1">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        statusStyles[project.status] || "bg-gray-400"
-                      } text-white`}
+                {filteredProjects.length > 0 ? (
+                  filteredProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="relative p-4 shadow-lg rounded-lg bg-white dark:bg-gray-800"
                     >
-                      {project.status}
-                    </span>
-                    </div>
-
-                    {/* Edit Icon */}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <button
-                          onClick={() => handleEditClick(project)}
-                          className="absolute top-2 right-2 text-gray-500 hover:text-blue-600"
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {project.name}
+                      </h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        Domain: {project.domain}
+                      </p>
+                      <div className="flex items-center mb-1">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusStyle(project.status)}`}
                         >
-                          <Pencil size={18} />
-                        </button>
-                      </AlertDialogTrigger>
-                      {selectedProject?.id === project.id && (
-                        <div className="dark:bg-gray-800 ">
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Edit Domain</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              You can update the domain for{" "}
-                              <strong>{selectedProject.name}</strong>.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
+                          {project.status}
+                        </span>
+                      </div>
 
-                          <div className="mt-4 space-y-2">
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
-                              <strong>Project Name:</strong>{" "}
-                              {selectedProject.name}
-                            </div>
+                      {/* Edit Icon */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            onClick={() => handleEditClick(project)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-blue-600"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        </AlertDialogTrigger>
+                        {selectedProject?.id === project.id && (
+                          <div className="dark:bg-gray-800">
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Edit Domain</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  You can update the domain for{" "}
+                                  <strong>{selectedProject.name}</strong>.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
 
-                            <Select
-                              value={newDomain}
-                              onValueChange={handleDomainChange}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a domain" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Artificial Intelligence">
-                                  Artificial Intelligence
-                                </SelectItem>
-                                <SelectItem value="Web Development">
-                                  Web Development
-                                </SelectItem>
-                                <SelectItem value="Blockchain">
-                                  Blockchain
-                                </SelectItem>
-                                <SelectItem value="Full Stack">
-                                  Full Stack
-                                </SelectItem>
-                                <SelectItem value="Data Science">
-                                  Data Science
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                              <div className="mt-4 space-y-2">
+                                <div className="text-sm text-gray-600 dark:text-gray-300">
+                                  <strong>Project Name:</strong>{" "}
+                                  {selectedProject.name}
+                                </div>
+
+                                <Select
+                                  value={newDomain}
+                                  onValueChange={handleDomainChange}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a domain" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Artificial Intelligence">
+                                      Artificial Intelligence
+                                    </SelectItem>
+                                    <SelectItem value="Web Development">
+                                      Web Development
+                                    </SelectItem>
+                                    <SelectItem value="Blockchain">
+                                      Blockchain
+                                    </SelectItem>
+                                    <SelectItem value="Full Stack">
+                                      Full Stack
+                                    </SelectItem>
+                                    <SelectItem value="Data Science">
+                                      Data Science
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <AlertDialogFooter>
+                                <AlertDialogCancel 
+                                  onClick={() => setSelectedProject(null)}
+                                >
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction onClick={handleSave}>
+                                  Save
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
                           </div>
-
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleSave}>
-                              Save
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                        </div>
-                      )}
-                    </AlertDialog>
+                        )}
+                      </AlertDialog>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center py-10 text-gray-500 dark:text-gray-400">
+                    No projects found matching your criteria
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
         )}
-{/* Dashboard Content - Reports Section */}
-{activeSection === "reports" && (
+
+        {/* Reports Section */}
+        {activeSection === "reports" && (
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">
-                {activeSubSection === "open"
-                  ? "Open Tickets"
-                  : activeSubSection === "closed"
-                  ? "Closed Tickets"
-                  : activeSubSection === "report"
-                  ? "Report Issue"
-                  : ""}
-              </h2>
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => changeSection("reports", "report")}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Report Issue
-                </button>
-                <button
-                  onClick={() => changeSection("reports", "open")}
-                  className={`px-4 py-2 rounded ${
-                    activeSubSection === "open"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  Open
-                </button>
-                <button
-                  onClick={() => changeSection("reports", "closed")}
-                  className={`px-4 py-2 rounded ${
-                    activeSubSection === "closed"
-                      ? "bg-gray-600 text-white"
-                      : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  Closed
-                </button>
-              </div>
+              <h2 className="text-lg font-semibold">Ticket Reports</h2>
+              <button
+                onClick={() => setShowReportIssue(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Report Issue
+              </button>
             </div>
-            {/* Main Content Section */}
 
-            {activeSubSection === "report" ? (
-              <ReportIssue />
+            {showReportIssue ? (
+              <ReportIssue 
+              onSuccess={(newReport) => {
+                if (!newReport) return;
+                setShowReportIssue(false);
+                setReports((prev) => [newReport, ...prev]);
+                setFilteredTickets((prev) => [newReport, ...prev]);
+              }}              
+              />
             ) : (
               <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Reported On
-                      </th>
-                     
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredTickets.map((ticket) => (
-                      <tr key={ticket.report_id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                          #{ticket.report_id}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                          {ticket.title}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                          {new Date(ticket.created_at).toISOString().split('T')[0]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="flex items-center">
-                            <span
-                              className={`w-2 h-2 mr-2 rounded-full ${
-                                statusStyles[ticket.report_status]
-                              }`}
-                            ></span>
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {ticket.report_status}
-                            </span>
-                          </span>
-                        </td>
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Reported On
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {filteredTickets.length > 0 ? (
+                        filteredTickets.map((ticket) => (
+                          <tr key={ticket.report_id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                              {ticket.report_id}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                              {ticket.title}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                              {new Date(ticket.created_at).toISOString().split('T')[0]}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="flex items-center">
+                                <span
+                                  className={`w-2 h-2 mr-2 rounded-full ${getStatusStyle(ticket.report_status)}`}
+                                ></span>
+                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                  {ticket.report_status}
+                                </span>
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            No tickets found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Dashboard Content - Payments Section */}
+        {/* Payments Section */}
         {activeSection === "payments" && (
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">
-                {activeSubSection === "past"
-                  ? "Past Payments"
-                  : "Pending Payments"}
-              </h2>
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => changeSection("payments", "past")}
-                  className={`px-4 py-2 rounded ${
-                    activeSubSection === "past"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  Completed
-                </button>
-                <button
-                  onClick={() => changeSection("payments", "pending")}
-                  className={`px-4 py-2 rounded ${
-                    activeSubSection === "pending"
-                      ? "bg-yellow-500 text-white"
-                      : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  Pending
-                </button>
-              </div>
+              <h2 className="text-lg font-semibold">Payment Management</h2>
             </div>
 
             {/* Payments Table */}
@@ -825,40 +628,53 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredPayments.map((payment) => (
-                  <tr key={payment.payment_id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      #{payment.payment_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {payment.project_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                      ₹{payment.total_amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                      {new Date(payment.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="flex items-center">
-                        <span
-                          className={`w-2 h-2 mr-2 rounded-full ${
-                            statusStyles[payment.payment_status]
-                          }`}
-                        ></span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          {payment.payment_status}
-                        </span>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+                  {filteredPayments.length > 0 ? (
+                    filteredPayments.map((payment) => (
+                      <tr key={payment.payment_id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {payment.payment_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {payment.project_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                          ₹{payment.total_amount?.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                          {new Date(payment.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="flex items-center">
+                            <span
+                            className={`w-2 h-2 mr-2 rounded-full ${
+                            getStatusStyle(
+                              payment.payment_status
+                            )
+                          }`}>
+                            </span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {payment.payment_status === "partially_paid"
+                                ? "Partially Paid"
+                                : payment.payment_status.charAt(0).toUpperCase() + payment.payment_status.slice(1)}
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        No payments found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
           </div>
         )}
       </div>
+      <ToastContainer />
     </div>
   );
 }
