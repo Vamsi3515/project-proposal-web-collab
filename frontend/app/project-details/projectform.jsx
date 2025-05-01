@@ -128,7 +128,7 @@ export default function ProjectDetails({ onProjectAdded }) {
       setShowDialog(false);
       
       toast.success("Project request submitted successfully!");
-      
+      router.push('/dashboard');
       if (onProjectAdded) {
         onProjectAdded();
       }      

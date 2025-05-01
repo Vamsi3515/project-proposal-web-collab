@@ -59,14 +59,11 @@ export default function Dashboard() {
   const [showReportIssue, setShowReportIssue] = useState(false);
   
   const handleLogout = () => {
-    // Example: Clear user token or session storage
     localStorage.removeItem("token");
 
-    // Redirect to home page
     router.push("/");
   };
 
-  // Function to fetch projects
   const fetchProjects = async () => {
     try {
       setLoading(true);
@@ -249,7 +246,7 @@ export default function Dashboard() {
       project.domain?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "All" || project.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -258,6 +255,10 @@ export default function Dashboard() {
     if (status === "paid") return "Paid";
     if (status === "pending") return "Pending";
     return status;
+  };
+
+  const handlePayNow = (projectId) => {
+    console.log("Pay now for project", projectId);
   };  
 
   return (
@@ -419,7 +420,7 @@ export default function Dashboard() {
                 {filteredProjects.length > 0 ? (
                   filteredProjects.map((project) => (
                     <div
-                      key={project.id}
+                      key={project.project_id}
                       className="relative p-4 shadow-lg rounded-lg bg-white dark:bg-gray-800"
                     >
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -435,7 +436,12 @@ export default function Dashboard() {
                           {project.status}
                         </span>
                       </div>
-
+                      <p className="text-sm text-gray-900 dark:text-gray-400 mb-1">
+                        Requested on: {new Date(project.created_at).toISOString().split('T')[0]}
+                      </p>
+                      <p className="text-sm text-gray-900 dark:text-gray-400 mb-2">
+                        Delivery by: {new Date(project.delivery_date).toISOString().split('T')[0]}
+                      </p>
                       {/* Edit Icon */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -504,6 +510,16 @@ export default function Dashboard() {
                           </div>
                         )}
                       </AlertDialog>
+                        {project.project_status === 'approved' && project.payment_status !== 'paid' && (
+                        <div className="absolute bottom-4 right-4">
+                          <button
+                            onClick={() => handlePayNow(project.project_id)}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-green-700 transition cursor-pointer"
+                          >
+                            Pay Now
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -617,7 +633,13 @@ export default function Dashboard() {
                       Project
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Amount
+                      Total Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Paid Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Pending Amount
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Date
@@ -639,6 +661,12 @@ export default function Dashboard() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                           ₹{payment.total_amount?.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                          ₹{payment.paid_amount?.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                          ₹{payment.pending_amount?.toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                           {new Date(payment.created_at).toLocaleDateString()}

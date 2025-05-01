@@ -1,24 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-const multer = require("multer");
 
 const projectController = require("../controllers/projectController.js");
 const authenticateUser = require("../middlewares/authMiddleware");
 const authorizeAdminOrOwner = require("../middlewares/authorizeAdminOrOwner.js");
 const { validateProjectData } = require("../middlewares/inputValidationMiddleware.js");
+const upload = require("../middlewares/multerConfig.js");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/projects/");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + file.originalname;
-    cb(null, uniqueSuffix);
-  },
-});
-
-const upload = multer({ storage });
 
 router.post(
   "/request",

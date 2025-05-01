@@ -1,9 +1,11 @@
 "use client"; // This is a client component
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, ChevronLeft, Grid, BarChart2, CreditCard, Search, Bell, User, Menu, X, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, Grid, BarChart2, CreditCard, Search, Bell, User, Menu, X, Check, AlertCircle, RefreshCw, LogOutIcon } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { Button } from '@/components/ui/button';
+import { useRouter } from "next/navigation";
 
 // Main Dashboard Component
 export default function AdminDashboard() {
@@ -17,9 +19,11 @@ export default function AdminDashboard() {
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const local_uri = "http://localhost:8000";
+  const router = useRouter();
 
   // Fetch data when component mounts
   useEffect(() => {
+
     const fetchData = async () => {
       setIsLoading(true);
   
@@ -45,6 +49,12 @@ export default function AdminDashboard() {
   
     fetchData();
   }, []);  
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+
+    router.push("/admin/login");
+  };
 
   const fetchProjects = async () => {
     try {
@@ -225,7 +235,6 @@ export default function AdminDashboard() {
               {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
             </h2>
            
-            
             <div className="flex items-center space-x-4">
                {/* <div className="right-20"> <ThemeToggle /> </div> */}
               {/* Search */}
@@ -248,6 +257,8 @@ export default function AdminDashboard() {
                 <Bell size={20} />
               </button>
              
+              <Button onClick={handleLogout} className="cursor-pointer"><LogOutIcon/>Logout</Button>
+
               {/* Profile */}
               {/* <button className="p-2 rounded-full hover:bg-gray-100">
                 <User size={20} />
@@ -540,6 +551,33 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
       console.log("Rejection failed: " + err.message);
     }
   };
+
+  const handleDeleteProject = async (projectId, paymentStatus) => {
+    const confirm = window.confirm("Are you sure you want to delete this project and its associated data?");
+    if (!confirm) return;
+  
+    if (paymentStatus !== 'pending' && paymentStatus !== 'refunded') {
+      toast.error("Cannot delete. Make a refund first to enable deletion.");
+      return;
+    }
+    console.log("Attempted delete:", projectId, "Status:", paymentStatus);
+  
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await axios.delete(`${local_uri}/api/admin/projects/delete/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast.success(res.data.message || "Project deleted successfully!");
+      fetchProjects();
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Error deleting project";
+      toast.error(errorMsg);
+    }
+  };
+  
+  fetchProjects();
   
   return (
     <div className="bg-white rounded-lg shadow">
@@ -554,6 +592,7 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -567,9 +606,26 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
                     <StatusBadge status={project.project_status || "No Status"} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(project.delivery_date).toLocaleDateString('en-GB') || "No Due Date"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge status={project.payment_status || "No Status"} />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                    <button className="text-red-600 hover:text-red-900 mr-3">Delete</button>
+                    <button
+                      onClick={() => handleDeleteProject(project.project_id, project.payment_status)}
+                      className={`mr-3 ${
+                        project.payment_status !== 'pending' && project.payment_status !== 'refunded'
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-red-600 hover:text-red-900'
+                      }`}
+                      title={
+                        project.payment_status !== 'pending' && project.payment_status !== 'refunded'
+                          ? 'Cannot delete. Payment initiated. Make a refund to delete.'
+                          : ''
+                      }
+                    >
+                      Delete
+                    </button>
                     {project.project_status === 'pending' && (
                       <>
                         <button 

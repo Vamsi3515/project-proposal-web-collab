@@ -38,12 +38,20 @@ exports.loginAdmin = async (req, res) => {
 };
 
 exports.getAllProjects = async (req, res) => {
-    try {
-        const [projects] = await pool.execute("SELECT * FROM projects");
-        res.status(200).json(projects);
-    } catch (error) {
-        res.status(500).json({ message: "Failed to fetch projects: " + error.message });
-    }
+  try {
+    const [projects] = await pool.execute(`
+      SELECT 
+        p.*, 
+        COALESCE(pay.payment_status, 'pending') AS payment_status
+      FROM projects p
+      LEFT JOIN payments pay 
+      ON p.project_id = pay.project_id
+    `);
+
+    res.status(200).json(projects);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch projects: " + error.message });
+  }
 };
 
 exports.updateProjectStatus = async (req, res) => {
@@ -143,7 +151,7 @@ exports.getAllPayments = async (req, res) => {
          VALUES (?, ?, ?, 0, 'pending')
          ON DUPLICATE KEY UPDATE total_amount = ?, payment_status = 'pending'`,
         [projectId, project.user_id, price, price]
-      );      
+      );         
   
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -263,5 +271,65 @@ exports.getAllPayments = async (req, res) => {
     } catch (error) {
       console.error("Delete Report Error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  exports.deleteProject = async (req, res) => {
+    const { projectId } = req.params;
+  
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID is required." });
+    }
+  
+    try {
+      const [[projectDetails]] = await pool.execute(
+        `SELECT p.project_id, p.user_id, p.project_name, u.email, pay.payment_status
+         FROM projects p
+         JOIN users u ON p.user_id = u.user_id
+         LEFT JOIN payments pay ON pay.project_id = p.project_id
+         WHERE p.project_id = ?`,
+        [projectId]
+      );
+  
+      if (!projectDetails) {
+        return res.status(404).json({ message: "Project not found." });
+      }
+  
+      const { payment_status, user_id, project_name, email } = projectDetails;
+  
+      if (payment_status !== 'pending' && payment_status !== 'refunded') {
+        return res.status(403).json({
+          message: "Cannot delete project. Payment status is not pending or refunded.",
+        });
+      }
+  
+      await pool.execute(`DELETE FROM users WHERE user_id = ?`, [user_id]);
+  
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+  
+      await transporter.sendMail({
+        from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Your project has been removed",
+        html: `
+          <h2>Hi,</h2>
+          <p>Your project <strong>${project_name}</strong> has been removed by the admin.</p>
+          <p>Reason: The project was not processed due to payment status (<strong>${payment_status}</strong>).</p>
+          <p>All your project and team details are also deleted from our system.</p>
+          <p>Feel free to submit a new request anytime.</p>
+        `,
+      });
+  
+      return res.status(200).json({ message: "Project and associated user data deleted successfully." });
+  
+    } catch (error) {
+      console.error("Delete Project Error:", error);
+      return res.status(500).json({ message: "Internal server error." });
     }
   };  

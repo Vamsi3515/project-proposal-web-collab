@@ -16,6 +16,8 @@ export default function MultiStepForm() {
   const [selectedDomain, setSelectedDomain] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const local_uri = "http://localhost:8000";
+  const [loading, setIsLoading] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState(null);
 
   const {
     register,
@@ -65,7 +67,6 @@ export default function MultiStepForm() {
     
     if (isValid && step < 3) {
       setTransitionDirection("next");
-      // Small delay to show loading state
       setTimeout(() => {
         setStep(step + 1);
         setIsLoading(false);

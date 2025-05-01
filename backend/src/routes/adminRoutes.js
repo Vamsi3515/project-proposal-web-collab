@@ -17,5 +17,6 @@ router.post('/projects/approve/:projectId', authorizeAdmin, adminController.appr
 router.post("/projects/reject/:projectId", authorizeAdmin, adminController.rejectProject);
 router.post('/reports/close/:reportId', authorizeAdmin, adminController.closeReport);
 router.delete('/reports/:reportId', authorizeAdmin, adminController.deleteReport);
+router.delete('/projects/delete/:projectId', authorizeAdmin, adminController.deleteProject);
 
 module.exports = router;

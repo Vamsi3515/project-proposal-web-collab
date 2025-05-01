@@ -182,13 +182,24 @@ exports.updateDomain = async (req, res) => {
 
 exports.getProjectsByUser = async (req, res) => {
   try {
-      const userId = req.user.id;
+    const userId = req.user.id;
 
-      const [projects] = await pool.execute("SELECT * FROM projects WHERE user_id = ?", [userId]);
+    const [projects] = await pool.execute(
+      `SELECT 
+         p.*, 
+         pay.payment_status, 
+         pay.paid_amount, 
+         pay.total_amount 
+       FROM projects p
+       LEFT JOIN payments pay ON p.project_id = pay.project_id
+       WHERE p.user_id = ?
+       ORDER BY p.created_at DESC`,
+      [userId]
+    );    
 
-      res.json(projects);
+    res.json(projects);
   } catch (error) {
-      res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

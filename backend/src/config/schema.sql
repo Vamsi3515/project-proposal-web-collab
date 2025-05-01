@@ -46,7 +46,7 @@ CREATE TABLE domains (
 
 -- Projects Table
 CREATE TABLE projects (
-    project_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT PRIMARY KEY AUTO_INCREMENT UNIQUE,
     user_id INT NOT NULL,
     project_code VARCHAR(20) UNIQUE NOT NULL,
     domain VARCHAR(100) NOT NULL,
@@ -118,26 +118,3 @@ CREATE TABLE refunds (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (payment_id) REFERENCES payments(payment_id) ON DELETE CASCADE
 );
-
--- ALTER TABLE students DROP INDEX roll_no;
--- ALTER TABLE students ADD UNIQUE (team_id, roll_no);
--- ALTER TABLE payments ADD COLUMN refund_status ENUM('pending', 'done') DEFAULT 'pending';
--- ALTER TABLE payments DROP COLUMN refund_status;
--- drop database project_proposal_web;
-
-show tables;
-
-select * from students;
-delete from projects where project_id in (2,3,4,5);
-
-update projects set project_status="approved" where project_id=1;
-update projects set project_status="rejected" where project_id=6;
-
-INSERT INTO payments (user_id, project_id, total_amount, paid_amount, pending_amount, payment_status, created_at)
-VALUES (1, 1, 5000.00, 2000.00, 3000.00, 'partially_paid', NOW());
-
-INSERT INTO payments (user_id, project_id, total_amount, paid_amount, payment_status, created_at)
-VALUES (1, 1, 5000.00, 2000.00, 'partially_paid', NOW());
-
-ALTER TABLE payments
-MODIFY payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
