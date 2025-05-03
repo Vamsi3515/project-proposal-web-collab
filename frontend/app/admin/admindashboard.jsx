@@ -1,6 +1,6 @@
 "use client"; // This is a client component
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, ChevronLeft, Grid, BarChart2, CreditCard, Search, Bell, User, Menu, X, Check, AlertCircle, RefreshCw, LogOutIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, Grid, BarChart2, CreditCard, Search, Bell, User, Menu, X, Check, AlertCircle, RefreshCw, LogOutIcon, Filter } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from "next/navigation";
 
 // Main Dashboard Component
+
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -18,15 +19,23 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  // New state for filters
+  const [projectStatusFilter, setProjectStatusFilter] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  
   const local_uri = "http://localhost:8000";
   const router = useRouter();
 
   // Fetch data when component mounts
   useEffect(() => {
-
     const fetchData = async () => {
       setIsLoading(true);
   
+      fetchProjects();
+      fetchPayments();
+      fetchReports();
+
       const storedProjects = localStorage.getItem('projects');
       const storedReports = localStorage.getItem('reports');
       const storedPayments = localStorage.getItem('payments');
@@ -52,7 +61,6 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
-
     router.push("/admin/login");
   };
 
@@ -99,7 +107,8 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching payments:", error);
     }
-  };  
+  };
+
 
   // Simulate a refund request
   const handleRefund = async () => {
@@ -122,12 +131,32 @@ export default function AdminDashboard() {
     }, 2000);
   };
 
+  // Enhanced filtering logic for projects
   const filteredProjects = projects.filter(project => {
-    console.log("Filtered project:", project);
-    return (project.project_name || "").toLowerCase().includes(searchQuery.toLowerCase());
+    // First apply the search query to multiple fields
+    const searchMatches = searchQuery === '' || 
+      (project.project_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.domain || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(project.project_id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.student_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.student_email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.student_id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.student_phone || "").toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Then apply the status filters
+    const projectStatusMatches = projectStatusFilter === '' || 
+      (project.project_status || "").toLowerCase() === projectStatusFilter.toLowerCase();
+    
+    const paymentStatusMatches = paymentStatusFilter === '' || 
+      (project.payment_status || "").toLowerCase() === paymentStatusFilter.toLowerCase();
+    
+    // Return true only if all conditions are met
+    return searchMatches && projectStatusMatches && paymentStatusMatches;
   });
-  console.log("Filtered Projects:", filteredProjects);
   
+  // Extract unique status values for filter dropdowns
+  const projectStatuses = [...new Set(projects.map(p => p.project_status).filter(Boolean))];
+  const paymentStatuses = [...new Set(projects.map(p => p.payment_status).filter(Boolean))];
   
   const filteredReports = reports.filter(report => 
     (report.title || "").toLowerCase().includes(searchQuery.toLowerCase())
@@ -159,6 +188,13 @@ export default function AdminDashboard() {
       default:
         return <DashboardContent isLoading={isLoading} projects={projects} reports={reports} payments={payments} />;
     }
+  };
+
+  // Reset filters function
+  const resetFilters = () => {
+    setSearchQuery('');
+    setProjectStatusFilter('');
+    setPaymentStatusFilter('');
   };
   
   return (
@@ -229,43 +265,86 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white shadow-sm z-10">
+        <header className="bg-white shadow-sm z-10 dark:bg-gray-800 text-black">
           <div className="px-4 py-3 flex items-center justify-between">
-            <h2 className="text-lg text-black font-medium">
+            <h2 className="text-lg text-black font-medium  dark:text-white">
               {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
             </h2>
            
             <div className="flex items-center space-x-4">
-               {/* <div className="right-20"> <ThemeToggle /> </div> */}
-              {/* Search */}
-              <div className="relative">
-              
+              {/* Search and filter section */}
+              <div className="relative flex items-center">
                 <input
                   type="text"
-                  placeholder="Search..."
-                  className="w-64 pl-10 pr-4 py-2 rounded-lg border text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search projects, students, IDs..."
+                  className="w-64 pl-10 pr-4 py-2 rounded-lg border text-black  dark:text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                
+                {/* Filter button */}
+                <button 
+                  className={`ml-2 p-2 rounded-lg text-black border border-gray-300  dark:text-white hover:bg-gray-100 dark:hover:bg-black ${showFilters ? 'bg-blue-50' : ''}`}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {/* <Filter size={18} /> */}
+                  <Filter size={18}/>
+                </button>
+
+                {/* Clear filters button - only visible when filters active */}
+                {(searchQuery || projectStatusFilter || paymentStatusFilter) && (
+                  <button 
+                    className="ml-2 p-2 rounded-lg text-red-500 border  dark:text-white border-gray-300 hover:bg-gray-100 dark:hover:bg-black"
+                    onClick={resetFilters}
+                    title="Clear filters"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
               </div>
               
-                    
-              
               {/* Notifications */}
-              <button className="p-2 rounded-full text-black hover:bg-gray-100">
+              {/* <button className="p-2 rounded-full text-black  dark:text-white hover:bg-gray-100 dark:hover:bg-black">
                 <Bell size={20} />
-              </button>
-             
-              <Button onClick={handleLogout} className="cursor-pointer"><LogOutIcon/>Logout</Button>
-
-              {/* Profile */}
-              {/* <button className="p-2 rounded-full hover:bg-gray-100">
-                <User size={20} />
               </button> */}
              
+              <Button onClick={handleLogout} className="cursor-pointer"><LogOutIcon/>Logout</Button>
             </div>
           </div>
+
+          {/* Filter dropdown section - only visible for projects */}
+          {showFilters && activeSection === 'projects' && (
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4">
+              <div className="flex items-center">
+                <label className="mr-2 text-sm font-medium text-gray-700">Project Status:</label>
+                <select 
+                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                  value={projectStatusFilter}
+                  onChange={(e) => setProjectStatusFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  {projectStatuses.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center">
+                <label className="mr-2 text-sm font-medium text-gray-700">Payment Status:</label>
+                <select 
+                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                  value={paymentStatusFilter}
+                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  {paymentStatuses.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </header>
         
         {/* Main Content Area */}
@@ -276,7 +355,7 @@ export default function AdminDashboard() {
       
       {/* Refund Modal */}
       {showRefundModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 dark:text-white rounded-lg shadow-lg w-full max-w-md p-6">
 
             <div className="flex justify-between items-center mb-4">
@@ -293,10 +372,11 @@ export default function AdminDashboard() {
               <p className="mb-4">Are you sure you want to process a refund for the following payment?</p>
               {selectedPayment && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p><span className="font-medium">ID:</span> {selectedPayment.id}</p>
-                  <p><span className="font-medium">Client:</span> {selectedPayment.client}</p>
-                  <p><span className="font-medium">Amount:</span> ${selectedPayment.amount.toFixed(2)}</p>
-                  <p><span className="font-medium">Date:</span> {selectedPayment.date}</p>
+                  <p><span className="font-medium">ID:</span> {selectedPayment.payment_id}</p>
+                  <p><span className="font-medium">Client:</span> {selectedPayment.student_name}</p>
+                  <p><span className="font-medium">Project ID:</span> {selectedPayment.project_code}</p>
+                  <p><span className="font-medium">Amount:</span> ₹{selectedPayment.paid_amount}</p>
+                  <p><span className="font-medium">Date:</span> {new Date(selectedPayment.created_at).toLocaleDateString('en-GB')}</p>
                 </div>
               )}
             </div>
@@ -319,7 +399,7 @@ export default function AdminDashboard() {
                     Processing...
                   </div>
                 ) : (
-                  'Confirm Refund'
+                  'Process Refund'
                 )}
               </button>
             </div>
@@ -329,7 +409,6 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
 // Navigation Item Component
 const NavItem = ({ icon, label, isActive, onClick, showLabel }) => {
   return (
@@ -357,6 +436,145 @@ const DashboardContent = ({ isLoading, projects, reports, payments, setActiveSec
   const paidPayments = payments.reduce((sum, payment) => sum + Number(payment.paid_amount || 0), 0);
   const refundedPayments = payments.filter(p => p.status === "refunded").length;
   const reportsClosed = reports.filter(r => r.report_status === "closed").length;
+  const [domains, setDomains] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState("");
+  const [existingFile, setExistingFile] = useState(null);
+  const local_uri = "http://localhost:8000";
+  const [newDomain, setNewDomain] = useState("");
+  const [newFile, setNewFile] = useState(null);
+  const [editDomainId, setEditDomainId] = useState(null);
+  const [editedDomainName, setEditedDomainName] = useState("");
+  const [editedFile, setEditedFile] = useState(null);
+  const [editDomain, setEditDomain] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editFile, setEditFile] = useState(null);
+
+  //fetch domains
+  useEffect(() => {
+    axios
+      .get(`${local_uri}/api/admin/domains`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`
+        }
+      })
+      .then((res) => setDomains(res.data.domains))
+      .catch((err) => console.error("Error fetching domains", err));
+  }, []);
+
+  const handleUpdateDomain = async (domainId) => {
+    const formData = new FormData();
+    formData.append("domainName", editedDomainName);
+    if (editedFile) formData.append("file", editedFile);
+  
+    try {
+      await axios.post(`${local_uri}/api/admin/domains/update/${domainId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      alert("Domain updated successfully");
+      setEditDomainId(null);
+      setEditedDomainName("");
+      setEditedFile(null);
+      const res = await axios.get(`${local_uri}/api/admin/domains`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+      });
+      setDomains(res.data.domains);
+    } catch (err) {
+      console.error("Update failed", err);
+      alert("Failed to update domain");
+    }
+  };  
+  
+  // Upload + add new domain
+  const handleNewDomainUpload = async () => {
+    if (!newDomain || !newFile) {
+      alert("Please enter domain name and select a file");
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append("domainName", newDomain);
+    formData.append("pdf", newFile);
+
+    try {
+      await axios.post(`${local_uri}/api/admin/domains`, formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+      alert("New domain and PDF uploaded!");
+      setNewFile(null);
+      setNewDomain("");
+      const res = await axios.get(`${local_uri}/api/admin/domains`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+      });
+      setDomains(res.data.domains);
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed");
+    }
+  };
+
+  const handleDeleteDomain = async (domainId) => {
+    if (!window.confirm("Are you sure you want to delete this domain?")) return;
+  
+    try {
+      await axios.post(`${local_uri}/api/admin/domains/delete/${domainId}`, {}, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+      });
+      alert("Domain deleted.");
+      const res = await axios.get(`${local_uri}/api/admin/domains`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+      });
+      setDomains(res.data.domains);
+    } catch (error) {
+      console.error("Delete failed", error);
+      alert("Failed to delete domain.");
+    }
+  };
+
+const handleEditClick = (domain) => {
+  setEditDomain(domain);
+  setEditName(domain.domain_name);
+  setEditFile(null); // reset file input
+};
+
+const handleEditSubmit = async () => {
+  const formData = new FormData();
+  formData.append("domainName", editName);
+  if (editFile) formData.append("pdf", editFile);
+
+  try {
+    await axios.post(`${local_uri}/api/admin/domains/update/${editDomain.domain_id}`, formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    alert("Domain updated successfully.");
+    setEditDomain(null);
+    const res = await axios.get(`${local_uri}/api/admin/domains`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+    });
+    setDomains(res.data.domains);
+  } catch (error) {
+    console.error("Update failed", error);
+    alert("Failed to update domain.");
+  }
+};
   
   if (isLoading) {
     return <LoadingState />;
@@ -381,14 +599,14 @@ const DashboardContent = ({ isLoading, projects, reports, payments, setActiveSec
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 dark:bg-gray-800">
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
             {recentProjects.map((project) => (
               <tr key={project.project_id}>
                 <td className="px-6 py-4 whitespace-nowrap">{project.project_name}</td>
@@ -419,15 +637,15 @@ const DashboardContent = ({ isLoading, projects, reports, payments, setActiveSec
           </div>
           <ul className="space-y-4">
           {recentReports.map((report, index) => (
-              <li key={report.report_id || index} className="flex items-center p-3 hover:bg-gray-50 rounded-lg">
+              <li key={report.report_id || index} className="flex items-center p-3 hover:bg-gray-50 hover:dark:text-black text-white rounded-lg">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <BarChart2 size={16} className="text-blue-600" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium">{report.title}</p>
+                  <p className="text-sm font-medium text-black">{report.title}</p>
                   <p className="text-xs text-gray-500">{new Date(report.created_at).toLocaleDateString('en-GB')}</p>
                 </div>
-                <span className="text-xs font-medium text-gray-500">{report.report_status}</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-1000">{report.report_status}</span>
               </li>
             ))}
           </ul>
@@ -441,29 +659,181 @@ const DashboardContent = ({ isLoading, projects, reports, payments, setActiveSec
           </div>
           <ul className="space-y-4">
             {recentPayments.map((payment, index) => (
-              <li key={payment.payment_id || index} className="flex items-center p-3 hover:bg-gray-50 rounded-lg">
+              <li key={payment.payment_id || index} className="flex items-center p-3 hover:bg-gray-50 rounded-lg dark:hover:text-black">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <CreditCard size={16} className="text-green-600" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium">{payment.project_name}</p>
+                  <p className="text-sm font-medium">{payment.project_code}</p>
                   <p className="text-xs text-gray-500">{new Date(payment.created_at).toLocaleDateString('en-GB')}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">₹{Number(payment.total_amount || 0).toFixed(2)}</p>
+                  <p className="text-sm font-medium dark:hover:text-blue-900">₹{Number(payment.total_amount || 0).toFixed(2)}</p>
                   <PaymentStatusBadge status={payment.payment_status} />
                 </div>
               </li>
             ))}
           </ul>
         </div>
+
       </div>
+
+      
+          {/* Upload Domain PDF Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium mb-6 text-center">Upload Domain PDF</h3>
+
+          {/* Centered Add New Domain Block */}
+          <div className="flex justify-center mb-10">
+            <div className="w-full max-w-md border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h4 className="text-md font-semibold mb-4 text-center">Add New Domain and Upload PDF</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">New Domain Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter domain name"
+                    value={newDomain}
+                    onChange={(e) => setNewDomain(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Upload PDF</label>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setNewFile(e.target.files[0])}
+                    className="w-full"
+                  />
+                </div>
+
+                <button
+                  onClick={handleNewDomainUpload}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+                >
+                  Add Domain & Upload
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Edit Section */}
+          {editDomain && (
+            <div className="bg-gray-100 dark:bg-gray-700 p-4 mt-6 rounded-lg max-w-xl mx-auto">
+              <h4 className="font-semibold mb-2">Edit Domain: {editDomain.domain_name}</h4>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full mb-2 p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => setEditFile(e.target.files[0])}
+                className="w-full mb-2"
+              />
+              <div className="flex gap-2">
+                <button onClick={handleEditSubmit} className="bg-blue-600 text-white px-4 py-1 rounded">
+                  Save
+                </button>
+                <button onClick={() => setEditDomain(null)} className="bg-gray-400 text-white px-4 py-1 rounded">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Domain Cards List */}
+          {domains.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Manage Domains</h3>
+              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {domains.map((domain) => (
+                  <div
+                    key={domain.domain_id}
+                    className="border rounded p-4 dark:border-gray-700 shadow-sm flex flex-col justify-between"
+                  >
+                    <div>
+                      <p className="font-medium text-lg">{domain.domain_name}</p>
+                      <a
+                        href={`${local_uri}${domain.pdf_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        View PDF
+                      </a>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => handleEditClick(domain)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDomain(domain.domain_id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>)}
+          </div>
     </div>
   );
 };
 
-// Projects Content Component
-const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) => {
+import { 
+  ProjectViewModal, 
+  ProjectApprovalModal, 
+  ProjectRejectionModal, 
+  DeleteConfirmationModal,
+  ReportViewModal,
+    CloseReportModal,
+    DeleteReportModal,
+    RefundDialog 
+} from './AdminDashboardModals';
+
+// // Loading State Component
+// const LoadingState = () => (
+//   <div className="p-8 text-center">
+//     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+//     <p className="mt-2 text-gray-600">Loading reports...</p>
+//   </div>
+// );
+
+// Status Badge Component
+// const StatusBadge = ({ status }) => {
+//   const getStatusClass = (status) => {
+//     switch (status.toLowerCase()) {
+//       case 'open':
+//         return 'bg-green-100 text-green-800';
+//       case 'closed':
+//         return 'bg-gray-100 text-gray-800';
+//       case 'pending':
+//         return 'bg-yellow-100 text-yellow-800';
+//       case 'urgent':
+//         return 'bg-red-100 text-red-800';
+//       default:
+//         return 'bg-blue-100 text-blue-800';
+//     }
+//   };
+
+
+const ProjectsContent = ({ isLoading, projects, setActiveSection, setProjects }) => {
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -478,22 +848,32 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
           Authorization: `Bearer ${token}`,
         },
       });
-      setProjects(response.data);
-      localStorage.setItem("projects", JSON.stringify(response.data));
+  
+      const parsedProjects = response.data.map(project => {
+        try {
+          return {
+            ...project,
+            college: typeof project.college === 'string' 
+              ? JSON.parse(project.college) 
+              : project.college
+          };
+        } catch (e) {
+          return {
+            ...project,
+            college: { name: null, branch: null, domain: null }
+          };
+        }
+      });
+  
+      setProjects(parsedProjects);
+      localStorage.setItem("projects", JSON.stringify(parsedProjects));
     } catch (error) {
       console.error("Error fetching projects:", error);
     }
-  };
+  };  
 
-  const handleApprove = async (projectId) => {
-    const price = prompt("Enter the price for this project:");
-    const local_uri = "http://localhost:8000";
+  const handleApprove = async (projectId, price) => {
     const token = localStorage.getItem("adminToken");
-  
-    if (!price || isNaN(price)) {
-      alert("Please enter a valid amount.");
-      return;
-    }
   
     try {
       const res = await fetch(`${local_uri}/api/admin/projects/approve/${projectId}`, {
@@ -514,19 +894,12 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
         console.log("Error: " + data.message);
       }
     } catch (err) {
-      alert("Approval failed: " + err.message);
+      toast.error("Approval failed: " + err.message);
     }
   };
 
-  const handleReject = async (projectId) => {
-    const reason = prompt("Enter the reason for rejecting this project:");
-    const local_uri = "http://localhost:8000";
+  const handleReject = async (projectId, reason) => {
     const token = localStorage.getItem("adminToken");
-  
-    if (!reason) {
-      alert("Rejection reason is required.");
-      return;
-    }
   
     try {
       const res = await fetch(`${local_uri}/api/admin/projects/reject/${projectId}`, {
@@ -552,15 +925,11 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
     }
   };
 
-  const handleDeleteProject = async (projectId, paymentStatus) => {
-    const confirm = window.confirm("Are you sure you want to delete this project and its associated data?");
-    if (!confirm) return;
-  
-    if (paymentStatus !== 'pending' && paymentStatus !== 'refunded') {
+  const handleDeleteProject = async (projectId) => {
+    if (selectedProject && (selectedProject.payment_status !== 'pending' && selectedProject.payment_status !== 'refunded')) {
       toast.error("Cannot delete. Make a refund first to enable deletion.");
       return;
     }
-    console.log("Attempted delete:", projectId, "Status:", paymentStatus);
   
     try {
       const token = localStorage.getItem("adminToken");
@@ -576,7 +945,48 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
       toast.error(errorMsg);
     }
   };
-  
+
+  const handleProjectUpdate = (updatedProject) => {
+    // Update the project in the local state
+    const updatedProjects = projects.map(p => 
+      p.project_id === updatedProject.project_id ? updatedProject : p
+    );
+    setProjects(updatedProjects);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPaymentStatusBadgeClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'refunded':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   fetchProjects();
   
   return (
@@ -597,51 +1007,71 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {projects.length > 0 ? (
-              projects.map((project, index) => (
-                <tr key={project.project_id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.project_id || "No ID"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">{project.project_name || "No Name"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={project.project_status || "No Status"} />
+            {projects && projects.length > 0 ? (
+              projects.map((project) => (
+                <tr key={project.project_id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
+                    {project.project_code}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(project.delivery_date).toLocaleDateString('en-GB') || "No Due Date"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={project.payment_status || "No Status"} />
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {project.project_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                    <button
-                      onClick={() => handleDeleteProject(project.project_id, project.payment_status)}
-                      className={`mr-3 ${
-                        project.payment_status !== 'pending' && project.payment_status !== 'refunded'
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-red-600 hover:text-red-900'
-                      }`}
-                      title={
-                        project.payment_status !== 'pending' && project.payment_status !== 'refunded'
-                          ? 'Cannot delete. Payment initiated. Make a refund to delete.'
-                          : ''
-                      }
-                    >
-                      Delete
-                    </button>
-                    {project.project_status === 'pending' && (
-                      <>
-                        <button 
-                          onClick={() => handleApprove(project.project_id)} 
-                          className="text-green-600 hover:text-green-900 ml-3"
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          onClick={() => handleReject(project.project_id)} 
-                          className="text-yellow-600 hover:text-yellow-900 ml-3"
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(project.project_status)}`}>
+                      {project.project_status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(project.delivery_date)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusBadgeClass(project.payment_status)}`}>
+                      {project.payment_status || "N/A"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setShowViewModal(true);
+                        }}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        View
+                      </button>
+                      {project.project_status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setShowApprovalModal(true);
+                            }}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setShowRejectionModal(true);
+                            }}
+                            className="text-yellow-600 hover:text-yellow-900"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setShowDeleteModal(true);
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -655,12 +1085,62 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection,setProjects }) 
           </tbody>
         </table>
       </div>
+
+      {/* Modals */}
+      {selectedProject && showViewModal && (
+        <ProjectViewModal
+          project={selectedProject}
+          onClose={() => setShowViewModal(false)}
+          onUpdate={handleProjectUpdate}
+        />
+      )}
+
+      {selectedProject && showApprovalModal && (
+        <ProjectApprovalModal
+          project={selectedProject}
+          onClose={() => setShowApprovalModal(false)}
+          onApprove={handleApprove}
+        />
+      )}
+
+      {selectedProject && showRejectionModal && (
+        <ProjectRejectionModal
+          project={selectedProject}
+          onClose={() => setShowRejectionModal(false)}
+          onReject={handleReject}
+        />
+      )}
+
+      {selectedProject && showDeleteModal && (
+        <DeleteConfirmationModal
+          item={selectedProject}
+          itemType="project"
+          onClose={() => setShowDeleteModal(false)}
+          onDelete={handleDeleteProject}
+          warning={
+            selectedProject.payment_status !== 'pending' && 
+            selectedProject.payment_status !== 'refunded' ? 
+            "This project has an active payment. Please refund the payment before deleting." : 
+            null
+          }
+        />
+      )}
     </div>
   );
 };
 
+
 // Reports Content Component
+
+
+
+// Main ReportsContent Component
 const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) => {
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -682,9 +1162,7 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
     }
   };
 
-  const handleCloseReport = async (reportId, reportName) => {
-    const confirmDelete = window.confirm(`Are you sure you want to close ${reportName} report?`);
-    if (!confirmDelete) return;
+  const handleCloseReport = async (reportId) => {
     const token = localStorage.getItem("adminToken");
     try {
       const res = await fetch(`${local_uri}/api/admin/reports/close/${reportId}`, {
@@ -708,10 +1186,7 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
     }
   };
   
-  const handleDeleteReport = async (reportId, reportName) => {
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${reportName} report?`);
-    if (!confirmDelete) return;
-  
+  const handleDeleteReport = async (reportId) => {
     const token = localStorage.getItem("adminToken");
     try {
       const res = await fetch(`${local_uri}/api/admin/reports/${reportId}`, {
@@ -733,12 +1208,34 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
       toast.error("Failed to Delete Report")
       console.log("Delete failed: " + err.message);
     }
-  };  
+  };
+
+  const handleReportReply = async (reportId, note) => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      await axios.post(
+        `${local_uri}/api/admin/reports/${reportId}/note`,
+        { note },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReports((rs) =>
+        rs.map((r) =>
+          r.report_id === reportId ? { ...r, report_note: note } : r
+        )
+      );
+      console.log("Reply saved");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save reply");
+    }
+  };
+
+  fetchReports();
   
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg  text-black font-medium">Report Management</h3>
+        <h3 className="text-lg text-black font-medium">Report Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -752,26 +1249,47 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {reports.length > 0 ? (
+            {reports && reports.length > 0 ? (
               reports.map((report, index) => (
                 <tr key={report.report_id || index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.report_id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(report.created_at).toLocaleDateString('en-GB')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(report.created_at).toLocaleDateString('en-GB')}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusBadge status={report.report_status || "No Status"} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-green-600 hover:text-green-900 mr-3">View</button>
+                    <button 
+                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      onClick={() => {
+                        setSelectedReport(report);
+                        setShowViewModal(true);
+                      }}
+                    >
+                      View
+                    </button>
                     {report.report_status === 'open' && (
                       <button
                         className="text-blue-600 hover:text-blue-900 mr-3"
-                        onClick={() => handleCloseReport(report.report_id, report.title)}
+                        onClick={() => {
+                          setSelectedReport(report);
+                          setShowCloseModal(true);
+                        }}
                       >
                         Close
                       </button>
                     )}
-                    <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteReport(report.report_id, report.title)}>Delete</button>
+                    <button 
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => {
+                        setSelectedReport(report);
+                        setShowDeleteModal(true);
+                      }}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
@@ -785,17 +1303,66 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
           </tbody>
         </table>
       </div>
+
+      {/* Modals */}
+      {selectedReport && showViewModal && (
+        <ReportViewModal
+          report={selectedReport}
+          onClose={() => setShowViewModal(false)}
+          onReply={handleReportReply}
+        />
+      )}
+
+      {selectedReport && showCloseModal && (
+        <CloseReportModal
+          report={selectedReport}
+          onClose={() => setShowCloseModal(false)}
+          onConfirm={handleCloseReport}
+        />
+      )}
+
+      {selectedReport && showDeleteModal && (
+        <DeleteReportModal
+          report={selectedReport}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteReport}
+        />
+      )}
     </div>
   );
 };
 
 // Payments Content Component
-const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
+
+const PaymentsContent = ({ isLoading, payments, onRefundRequest, onConfirmRefund }) => {
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  const handleRefundClick = (payment) => {
+    setSelectedPayment(payment);
+    setRefundDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setRefundDialogOpen(false);
+    setSelectedPayment(null);
+  };
+
+  const handleConfirmRefund = (payment) => {
+    if (onConfirmRefund) {
+      onConfirmRefund(payment);
+    } else if (onRefundRequest) {
+      onRefundRequest(payment);
+    }
+    setRefundDialogOpen(false);
+    setSelectedPayment(null);
+  };
+
   if (isLoading) {
     return <LoadingState />;
   }
 
-  console.log("Payments :", payments);
+  console.log("Payments:", payments);
   
   return (
     <div className="bg-white rounded-lg shadow">
@@ -835,18 +1402,17 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
                     <PaymentStatusBadge status={payment.payment_status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ₹{isNaN(payment.paid_amount) ? "0.00" : Number(payment.pending_amount).toFixed(2)}
+                    ₹{isNaN(payment.pending_amount) ? "0.00" : Number(payment.pending_amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ₹{isNaN(payment.refund_amt) ? "0.00" : Number(payment.refund_amt).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(payment.created_at).toLocaleDateString('en-GB')}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-red-600 hover:text-blue-900 mr-3">Refund</button>
-                    {payment.refundable && (
+                    {(
                       <button 
                         className="text-red-600 hover:text-red-900"
-                        onClick={() => onRefundRequest(payment)}
+                        onClick={() => handleRefundClick(payment)}
                       >
                         Refund
                       </button>
@@ -856,7 +1422,7 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500">
                   No payments found
                 </td>
               </tr>
@@ -864,6 +1430,14 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest }) => {
           </tbody>
         </table>
       </div>
+      
+      {/* Refund Dialog */}
+      <RefundDialog 
+        isOpen={refundDialogOpen} 
+        payment={selectedPayment} 
+        onClose={handleCloseDialog}
+        onConfirmRefund={handleConfirmRefund}
+      />
     </div>
   );
 };
