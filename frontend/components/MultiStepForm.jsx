@@ -1,15 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-
-
-const domains = [
-  { name: "Web Development", pdf: "/pdfs/web-development.pdf" },
-  { name: "Machine Learning", pdf: "/pdfs/machine-learning.pdf" },
-  { name: "Cyber Security", pdf: "/pdfs/cyber-security.pdf" },
-];
+import axios from "axios";
 
 export default function MultiStepForm() {
   const [step, setStep] = useState(1);
@@ -18,6 +12,7 @@ export default function MultiStepForm() {
   const local_uri = "http://localhost:8000";
   const [loading, setIsLoading] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState(null);
+  const [domainList, setDomainList] = useState([]);
 
   const {
     register,
@@ -86,6 +81,20 @@ export default function MultiStepForm() {
       setIsLoading(false);
     }, 400);
   };
+
+  useEffect(() => {
+    const fetchDomains = async () => {
+      try {
+        const response = await axios.get(`${local_uri}/api/users/domains`, {
+        });
+        setDomainList(response.data.domains);
+      } catch (error) {
+        console.error("Failed to fetch domains:", error);
+      }
+    };
+  
+    fetchDomains();
+  }, []);
 
   const router = useRouter(); 
   const onSubmit = async (data) => {
@@ -359,23 +368,29 @@ export default function MultiStepForm() {
 
           {step === 3 && (
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 min-h-64">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Resource Selection</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                Resource Selection
+              </h2>
+
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Study Material</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Select Study Material
+                </label>
+
                 <select
                   value={selectedDomain}
                   onChange={(e) => setSelectedDomain(e.target.value)}
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                 >
                   <option value="">-- Select a Domain --</option>
-                  {domains.map((d) => (
-                    <option key={d.name} value={d.pdf}>
-                      {d.name}
+                  {domainList.map((d) => (
+                    <option key={d.domain_id} value={d.pdf_url}>
+                      {d.domain_name}
                     </option>
                   ))}
                 </select>
-                {step === 3 && !selectedDomain && (
+
+                {!selectedDomain && (
                   <p className="mt-1 text-sm text-red-600">Please select a domain</p>
                 )}
               </div>
@@ -384,15 +399,17 @@ export default function MultiStepForm() {
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                   <h3 className="font-medium text-gray-800 dark:text-white mb-2">Selected Resource</h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    You've selected {domains.find(d => d.pdf === selectedDomain)?.name} study materials.
+                    You've selected {
+                      domainList.find(d => d.pdf_url === selectedDomain)?.domain_name
+                    } study materials.
                   </p>
-                  <a 
-                    href={selectedDomain} 
-                    download 
+                  <a
+                    href={`${local_uri}/download${selectedDomain}`}
+                    download
                     className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition-colors"
                   >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                     Download PDF
                   </a>
@@ -400,6 +417,7 @@ export default function MultiStepForm() {
               )}
             </div>
           )}
+
         </div>
 
         <div className="flex justify-between mt-8 pt-4 border-t dark:border-gray-700">

@@ -49,7 +49,7 @@ const AdminLogin = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
-          className="w-full mb-3 px-3 py-2 border rounded dark:text-black dark:border-black"
+          className="w-full mb-3 px-3 py-2 border rounded"
           required
         />
 
@@ -58,7 +58,7 @@ const AdminLogin = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="w-full mb-3 px-3 py-2 border rounded dark:text-black dark:border-black"
+          className="w-full mb-3 px-3 py-2 border rounded"
           required
         />
 

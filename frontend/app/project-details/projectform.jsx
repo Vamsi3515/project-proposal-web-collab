@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 export default function ProjectDetails({ onProjectAdded }) {
   const [projectId, setProjectId] = useState("");
   const [domain, setDomain] = useState("");
+  const [domainList, setDomainList] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
@@ -46,6 +47,20 @@ export default function ProjectDetails({ onProjectAdded }) {
   
     getProjectId();
   }, []);  
+
+  useEffect(() => {
+    const fetchDomains = async () => {
+      try {
+        const response = await axios.get(`${local_uri}/api/users/domains`, {
+        });
+        setDomainList(response.data.domains);
+      } catch (error) {
+        console.error("Failed to fetch domains:", error);
+      }
+    };
+  
+    fetchDomains();
+  }, []);
 
   const validateForm = () => {
     const errors = {};
@@ -208,10 +223,11 @@ export default function ProjectDetails({ onProjectAdded }) {
             required
           >
             <option value="">Select Domain</option>
-            <option value="AI">Artificial Intelligence</option>
-            <option value="Web">Web Development</option>
-            <option value="Blockchain">Blockchain</option>
-            <option value="Data Science">Data Science</option>
+            {domainList.map((d) => (
+              <option key={d.domain_id} value={d.domain_name}>
+                {d.domain_name}
+              </option>
+            ))}
           </select>
           {formErrors.domain && (
             <p className="text-red-500 text-sm mt-1">{formErrors.domain}</p>

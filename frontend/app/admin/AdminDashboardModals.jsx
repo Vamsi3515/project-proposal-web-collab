@@ -44,12 +44,16 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
     try {
       const token = localStorage.getItem("adminToken");
   
+      const formattedDate = editedProject.delivery_date
+        ? new Date(editedProject.delivery_date).toISOString().split("T")[0]
+        : null;
+  
       const response = await axios.put(
         `${local_uri}/api/admin/update-project/${project.project_code}`,
         {
           project_name: editedProject.project_name,
           domain: editedProject.domain,
-          delivery_date: editedProject.delivery_date,
+          delivery_date: formattedDate,
         },
         {
           headers: {
@@ -156,7 +160,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b">
-          <h3 className="text-lg font-medium flex items-center ">
+          <h3 className="text-lg font-medium flex items-center">
             {isEditing ? <Edit size={18} className="mr-2" /> : <Eye size={18} className="mr-2" />}
             {isEditing ? 'Edit Project' : 'View Project'}
           </h3>
@@ -164,7 +168,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="mr-3 text-blue-600 hover:text-blue-800 flex items-center dark:text-white dark:hover:text-blue-400"
+                className="mr-3 text-blue-600 hover:text-blue-800 flex items-center"
               >
                 <Edit size={16} className="mr-1" /> Edit
               </button>
@@ -181,14 +185,14 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
         <div className="p-6 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium mb-1 ">Project ID</label>
+              <label className="block text-sm font-medium mb-1">Project ID</label>
               {isEditing ? (
                 <input
                   type="text"
                   name="project_id"
                   value={editedProject.project_code || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
+                  className="w-full p-2 border border-gray-300 rounded"
                   disabled
                 />
               ) : (
@@ -204,10 +208,10 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   name="project_name"
                   value={editedProject.project_name || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white "
+                  className="w-full p-2 border border-gray-300 rounded"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.project_name || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">{project.project_name || 'N/A'}</p>
               )}
             </div>
 
@@ -219,15 +223,15 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   name="domain"
                   value={editedProject.domain || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
+                  className="w-full p-2 border border-gray-300 rounded"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.domain || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">{project.domain || 'N/A'}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Payment Status</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.payment_status || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">{project.payment_status || 'N/A'}</p>
             </div>
 
             <div>
@@ -238,10 +242,10 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   name="delivery_date"
                   value={editedProject.delivery_date ? new Date(editedProject.delivery_date).toISOString().split('T')[0] : ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
+                  className="w-full p-2 border border-gray-300 rounded"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                   {project.delivery_date ? new Date(project.delivery_date).toLocaleDateString() : 'N/A'}
                 </p>
               )}
@@ -291,37 +295,37 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Student Name</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                       {project.full_name || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Student ID</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                       {project.user_id || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Email</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                       {project.user_email || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">College</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                       {project.college["name"] || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Branch</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                       {project.college["branch"] || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Field</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                       {project.college["domain"] || 'Not Available'}
                     </p>
                   </div>
@@ -376,7 +380,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           {project.admin_notes && (
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Previous Note</label>
-            <p className="p-3 border border-gray-200 rounded bg-yellow-50">{project.admin_notes}</p>
+            <p className="p-3 border border-gray-200 rounded bg-yellow-50 dark:bg-gray-800">{project.admin_notes}</p>
           </div>
         )}
 
@@ -403,7 +407,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center p-4 border-t bg-gray-50">
+        <div className="flex justify-between items-center p-4 border-t bg-gray-50 dark:bg-gray-800 ">
           {isEditing ? (
             <>
               <button
@@ -423,7 +427,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             <>
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 border border-gray-300 rounded text-gray-700 dark:text-white hover:bg-gray-100  dark:hover:bg-gray-700"
               >
                 Close
               </button>
@@ -474,7 +478,7 @@ export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
         
         <div className="mb-6">
           <p className="mb-4">You are about to approve the following project:</p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <div className="bg-gray-50 dark:bg-gray-800 dark:border-gray-600 p-4 rounded-lg mb-4">
             <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
             <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
             <p><span className="font-medium">Domain:</span> {project.domain}</p>
@@ -508,7 +512,7 @@ export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:text-black"
           >
             Cancel
           </button>
@@ -556,7 +560,7 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
         
         <div className="mb-6">
           <p className="mb-4">You are about to reject the following project:</p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
             <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
             <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
             <p><span className="font-medium">Domain:</span> {project.domain}</p>
@@ -588,7 +592,7 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:text-black"
           >
             Cancel
           </button>
@@ -624,7 +628,7 @@ export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, war
         
         <div className="mb-6">
           <p className="mb-4">Are you sure you want to delete this {itemType}?</p>
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
             {itemType === 'project' && (
               <>
                 <p><span className="font-medium">ID:</span> {item.project_id}</p>
@@ -654,7 +658,7 @@ export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, war
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:text-black"
           >
             Cancel
           </button>
@@ -766,31 +770,31 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Report ID</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{report.report_id || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">{report.report_id || 'N/A'}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Title</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{report.title || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">{report.title || 'N/A'}</p>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Status</label>
-                <div className="p-2 border border-gray-200 rounded bg-gray-50">
+                <div className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                   <StatusBadge status={report.report_status || "No Status"} />
                 </div>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Date Created</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
                   {report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A'}
                 </p>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
-                <div className="p-3 border border-gray-200 rounded bg-gray-50 min-h-24 whitespace-pre-wrap">
+                <div className="p-3 border border-gray-200 rounded bg-gray-50 min-h-24 whitespace-pre-wrap dark:bg-gray-800">
                   {report.description || 'No description provided.'}
                 </div>
               </div>
@@ -845,10 +849,10 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             </div>
           </div>
   
-          <div className="flex justify-end p-4 border-t bg-gray-50">
+          <div className="flex justify-end p-4 border-t bg-gray-50 dark:bg-gray-800">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:text-black"
             >
               Close
             </button>
@@ -878,13 +882,13 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           
           <div className="mb-6">
             <p className="mb-4">Are you sure you want to close this report?</p>
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800">
               <p><span className="font-medium">Report ID:</span> {report.report_id}</p>
               <p><span className="font-medium">Title:</span> {report.title}</p>
               <p><span className="font-medium">Status:</span> <StatusBadge status={report.report_status} /></p>
             </div>
             
-            <p className="mt-4 text-sm text-gray-500 ">
+            <p className="mt-4 text-sm text-gray-500">
               Closing this report will mark it as resolved. It can still be viewed but won't appear in active reports.
             </p>
           </div>
@@ -892,7 +896,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:text-black"
             >
               Cancel
             </button>
@@ -931,7 +935,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           
           <div className="mb-6">
             <p className="mb-4">Are you sure you want to delete this report?</p>
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800">
               <p><span className="font-medium">Report ID:</span> {report.report_id}</p>
               <p><span className="font-medium">Title:</span> {report.title}</p>
               <p><span className="font-medium">Status:</span> <StatusBadge status={report.report_status} /></p>
@@ -946,7 +950,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:text-black"
             >
               Cancel
             </button>

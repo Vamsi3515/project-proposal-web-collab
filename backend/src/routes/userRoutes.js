@@ -9,5 +9,6 @@ router.post("/login", userController.loginUser);
 router.post("/verify-otp", validateOTP ,userController.verifyOTP);
 router.post("/send-otp", userController.sendOtpToEmail);
 router.post("/submit-multistep-data", authenticateUser, userController.submitMultistepData);
+router.get("/domains", userController.getAllDomains);
 
 module.exports = router;

@@ -66,16 +66,15 @@ export default function Dashboard() {
   const [newDomain, setNewDomain] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState("All");
-const [reportStatusFilter, setReportStatusFilter] = useState("all");
+  const [reportStatusFilter, setReportStatusFilter] = useState("all");
   const [showNewProject, setShowNewProject] = useState(false);
   const [showReportIssue, setShowReportIssue] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-const [showViewDialog, setShowViewDialog] = useState(false);
-const [selectedPayment, setSelectedPayment] = useState(null);
-const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [domains, setDomains] = useState([]);
 
-const [projectStatusFilter, setProjectStatusFilter] = useState("All");
-const [reportStatusFilter, setReportStatusFilter] = useState("all");
   const handleLogout = () => {
     localStorage.removeItem("token");
 
@@ -161,7 +160,7 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
       fetchReports();
     }
   }, [activeSection]);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -278,8 +277,8 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
     const matchesSearch =
       project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.domain?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
+
+      const matchesStatus = projectStatusFilter === "All" || project.status === projectStatusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -300,8 +299,9 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
     setShowPaymentDialog(true);
   };
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(''); // Default to show all tickets
-  const [selectedProjectForDetails, setSelectedProjectForDetails] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Default to show all tickets
+  const [selectedProjectForDetails, setSelectedProjectForDetails] =
+    useState(null);
 
   // For file downloads
   const handleFileDownload = (fileUrl) => {
@@ -386,22 +386,32 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
       ]
     : [];
   
-    const [domains, setDomains] = useState([]);
+    useEffect(() => {
+      const fetchDomains = async () => {
+        try {
+          const token = localStorage.getItem("adminToken");
+          const response = await axios.get(`${local_uri}/api/admin/domains`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setDomains(response.data.domains);
+        } catch (error) {
+          console.error("Failed to fetch domains:", error);
+        }
+      };
+    
+      fetchDomains();
+    }, []);
 
-  // Fetch data from the backend when the component mounts
-  useEffect(() => {
-    const fetchDomains = async () => {
-      // Use mock data instead of fetching from an actual API
-      const mockData = [
-        { domain_id: 1, domain_name: "Domain 1", pdf_url: "/path/to/pdf1.pdf" },
-        { domain_id: 2, domain_name: "Domain 2", pdf_url: "/path/to/pdf2.pdf" },
-        { domain_id: 3, domain_name: "Domain 3", pdf_url: "/path/to/pdf3.pdf" }
-      ];
-      setDomains(mockData); // Set the mock data into state
-    };
-
-    fetchDomains();
-  }, []);
+    const handleDownload = (url, filename) => {
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };    
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 w-full">
@@ -561,21 +571,21 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
                   />
                 </div>
 
-        {/* Status Filter */}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full md:w-40">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Status</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+                {/* Status Filter */}
+                <Select value={projectStatusFilter} onValueChange={setProjectStatusFilter}>
+                  <SelectTrigger className="w-full md:w-40">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Status</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             {showNewProject ? (
               <ProjectDetails onProjectAdded={handleProjectAdded} />
@@ -964,17 +974,17 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
                     </span>
                   </div>
 
-          {/* Status filter */}
-          <select
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All</option>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
+                  {/* Status filter */}
+                  <select
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    value={reportStatusFilter}
+onChange={(e) => setReportStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
 
                 <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
@@ -1464,25 +1474,28 @@ const [reportStatusFilter, setReportStatusFilter] = useState("all");
           </div>
         )}
         {activeSection === "domain" && (
-  <div className="p-6">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-lg font-semibold">Domains</h2>
-    </div>
-    <div className="grid grid-cols-3 gap-6">
-      {domains.map((domain) => (
-        <div key={domain.domain_id} className="bg-white shadow-md rounded-lg p-4">
-          <h3 className="text-xl font-semibold mb-4">{domain.domain_name}</h3>
-          <a
-            href={domain.pdf_url}
-            download
-            className="inline-block bg-blue-500 text-white py-2 px-4 rounded-lg text-center"
-          >
-            Download PDF
-          </a>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold">Domains</h2>
+          </div>
+          {Array.isArray(domains) && domains.length > 0 ? (
+          <div className="grid grid-cols-3 gap-6">
+            {domains.map((domain) => (
+              <div key={domain.domain_id} className="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800">
+                <h3 className="text-xl font-semibold mb-4 dark:text-white">{domain.domain_name}</h3>
+                <a
+                href={`${local_uri}/download${domain.pdf_url}`}
+                className="inline-block bg-blue-500 text-white py-2 px-4 rounded-lg text-center"
+              >
+                Download PDF
+              </a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No domain PDFs found.</p>
+        )}
         </div>
-      ))}
-    </div>
-  </div>
 )}
 
       </div>

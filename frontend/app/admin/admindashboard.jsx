@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   const [reportStatusFilter, setReportStatusFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFilterType, setDateFilterType] = useState("delivery");
+  const [dateFilterType, setDateFilterType] = useState("delivery"); // delivery or created
 const [startDate, setStartDate] = useState("");
 const [endDate, setEndDate] = useState("");
 
@@ -49,10 +49,11 @@ const [endDate, setEndDate] = useState("");
   const router = useRouter();
 
   const handleSectionChange = (section) => {
-    resetFilters();
+    resetFilters(); // This uses your existing resetFilters function
     setActiveSection(section);
   };
 
+  // Fetch data when component mounts
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -173,28 +174,51 @@ const [endDate, setEndDate] = useState("");
   };
 
   // Enhanced filtering logic for projects
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project) => {
     // First apply the search query to multiple fields
-    const searchMatches = searchQuery === '' || 
-      (project.project_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.domain || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(project.project_id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.student_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.student_email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.student_id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.student_phone || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const searchMatches =
+      searchQuery === "" ||
+      (project.project_name || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (project.domain || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      String(project.project_id || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (project.student_name || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (project.student_email || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (project.student_id || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (project.student_phone || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
     // Then apply the status filters
-    const projectStatusMatches = projectStatusFilter === '' || 
-      (project.project_status || "").toLowerCase() === projectStatusFilter.toLowerCase();
-    
-    const paymentStatusMatches = paymentStatusFilter === '' || 
-      (project.payment_status || "").toLowerCase() === paymentStatusFilter.toLowerCase();
-    
+    const projectStatusMatches =
+      projectStatusFilter === "" ||
+      (project.project_status || "").toLowerCase() ===
+        projectStatusFilter.toLowerCase();
+
+    const paymentStatusMatches =
+      paymentStatusFilter === "" ||
+      (project.payment_status || "").toLowerCase() ===
+        paymentStatusFilter.toLowerCase();
+
+        const dateMatches = (!startDate && !endDate) || isDateInRange(
+          dateFilterType === "delivery" ? project.delivery_date : project.created_at,
+          dateFilterType
+        );
     // Return true only if all conditions are met
-    return searchMatches && projectStatusMatches && paymentStatusMatches;
+    return searchMatches && projectStatusMatches && paymentStatusMatches && dateMatches;
   });
-  
+
   // Extract unique status values for filter dropdowns
   const projectStatuses = [
     ...new Set(projects.map((p) => p.project_status).filter(Boolean)),
@@ -286,9 +310,13 @@ const [endDate, setEndDate] = useState("");
 
   // Reset filters function
   const resetFilters = () => {
-    setSearchQuery('');
-    setProjectStatusFilter('');
-    setPaymentStatusFilter('');
+    setSearchQuery("");
+    setProjectStatusFilter("");
+    setReportStatusFilter("");
+    setPaymentStatusFilter("");
+    setStartDate("");
+setEndDate("");
+setDateFilterType("delivery");
   };
 
   return (
@@ -364,36 +392,44 @@ const [endDate, setEndDate] = useState("");
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
         <header className="bg-white shadow-sm z-10 dark:bg-gray-800 text-black">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <h2 className="text-lg text-black font-medium  dark:text-white">
+          <div className="px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            {/* Title */}
+            <h2 className="text-lg text-black font-medium dark:text-white">
               {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
             </h2>
-           
-            <div className="flex items-center space-x-4">
+
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
+              <ThemeToggle />
+
               {/* Search and filter section */}
-              <div className="relative flex items-center">
+              <div className="relative flex items-center w-full sm:w-auto">
                 <input
                   type="text"
                   placeholder="Search projects, students, IDs..."
-                  className="w-64 pl-10 pr-4 py-2 rounded-lg border text-black  dark:text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border text-black dark:text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
-                
+                <Search
+                  size={18}
+                  className="absolute left-3 top-2.5 text-gray-400"
+                />
+
                 {/* Filter button */}
-                <button 
-                  className={`ml-2 p-2 rounded-lg text-black border border-gray-300  dark:text-white hover:bg-gray-100 dark:hover:bg-black ${showFilters ? 'bg-blue-50' : ''}`}
+                <button
+                  className={`ml-2 p-2 rounded-lg text-black border border-gray-300 dark:text-white  dark:hover:bg-black ${showFilters}`}
                   onClick={() => setShowFilters(!showFilters)}
                 >
-                  {/* <Filter size={18} /> */}
-                  <Filter size={18}/>
+                  <Filter size={18} />
                 </button>
 
-                {/* Clear filters button - only visible when filters active */}
-                {(searchQuery || projectStatusFilter || paymentStatusFilter) && (
-                  <button 
-                    className="ml-2 p-2 rounded-lg text-red-500 border  dark:text-white border-gray-300 hover:bg-gray-100 dark:hover:bg-black"
+                {/* Clear filters */}
+                {(searchQuery ||
+                  projectStatusFilter ||
+                  paymentStatusFilter) && (
+                  <button
+                    className="ml-2 p-2 rounded-lg text-red-500 border dark:text-white border-gray-300 hover:bg-gray-100 dark:hover:bg-black"
                     onClick={resetFilters}
                     title="Clear filters"
                   >
@@ -401,50 +437,115 @@ const [endDate, setEndDate] = useState("");
                   </button>
                 )}
               </div>
-              
-              {/* Notifications */}
-              {/* <button className="p-2 rounded-full text-black  dark:text-white hover:bg-gray-100 dark:hover:bg-black">
-                <Bell size={20} />
-              </button> */}
-             
-              <Button onClick={handleLogout} className="cursor-pointer"><LogOutIcon/>Logout</Button>
+
+              {/* Logout Button */}
+              <Button
+                onClick={handleLogout}
+                className="cursor-pointer flex items-center gap-2"
+              >
+                <LogOutIcon /> Logout
+              </Button>
             </div>
           </div>
 
-          {/* Filter dropdown section - only visible for projects */}
-          {showFilters && activeSection === 'projects' && (
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4">
+          {/* Filters for projects */}
+          {showFilters && activeSection === "projects" && (
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-4">
               <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">Project Status:</label>
-                <select 
+                <label className="mr-2 text-sm font-medium text-gray-700">
+                  Project Status:
+                </label>
+                <select
                   className="p-2 border border-gray-300 rounded-md text-sm text-black"
                   value={projectStatusFilter}
                   onChange={(e) => setProjectStatusFilter(e.target.value)}
                 >
                   <option value="">All</option>
-                  {projectStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {projectStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">Payment Status:</label>
-                <select 
+                <label className="mr-2 text-sm font-medium text-gray-700">
+                  Payment Status:
+                </label>
+                <select
                   className="p-2 border border-gray-300 rounded-md text-sm text-black"
                   value={paymentStatusFilter}
                   onChange={(e) => setPaymentStatusFilter(e.target.value)}
                 >
                   <option value="">All</option>
-                  {paymentStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {paymentStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center flex-wrap gap-2">
+  <div className="flex items-center">
+    <label className="mr-2 text-sm font-medium text-gray-700">Filter By:</label>
+    <select
+      className="p-2 border border-gray-300 rounded-md text-sm text-black"
+      value={dateFilterType}
+      onChange={(e) => setDateFilterType(e.target.value)}
+    >
+      <option value="delivery">Delivery Date</option>
+      <option value="created">Creation Date</option>
+    </select>
+  </div>
+  
+  <div className="flex items-center">
+    <label className="mr-2 text-sm font-medium text-gray-700">From:</label>
+    <input
+      type="date"
+      className="p-2 border border-gray-300 rounded-md text-sm text-black"
+      value={startDate}
+      onChange={(e) => setStartDate(e.target.value)}
+    />
+  </div>
+  
+  <div className="flex items-center">
+    <label className="mr-2 text-sm font-medium text-gray-700">To:</label>
+    <input
+      type="date"
+      className="p-2 border border-gray-300 rounded-md text-sm text-black"
+      value={endDate}
+      onChange={(e) => setEndDate(e.target.value)}
+    />
+  </div>
+</div>
+            </div>
+
+          )}
+          {/*Reports Filter*/}
+          {showFilters && activeSection === "reports" && (
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-4">
+              <div className="flex items-center">
+                <label className="mr-2 text-sm font-medium text-gray-700">
+                  Report Status:
+                </label>
+                <select
+                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                  value={reportStatusFilter}
+                  onChange={(e) => setReportStatusFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  {reportStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
           )}
         </header>
-        
+
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-6">{renderContent()}</main>
       </div>
@@ -811,27 +912,50 @@ const DashboardContent = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Reports */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Recent Reports</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-800" onClick={() => setActiveSection('reports')}>View All</button>
+            <button
+              className="text-sm text-blue-600 hover:text-blue-800"
+              onClick={() => setActiveSection("reports")}
+            >
+              View All
+            </button>
           </div>
+
           <ul className="space-y-4">
-          {recentReports.map((report, index) => (
-              <li key={report.report_id || index} className="flex items-center p-3 hover:bg-gray-50 hover:dark:text-black text-white rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <BarChart2 size={16} className="text-blue-600" />
+            {recentReports.map((report, index) => (
+              <li
+                key={report.report_id || index}
+                className="flex items-center p-3 rounded-lg transition-colors 
+                 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                {/* Icon */}
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <BarChart2
+                    size={16}
+                    className="text-blue-600 dark:text-blue-300"
+                  />
                 </div>
+
+                {/* Report Info */}
                 <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium text-black">{report.title}</p>
-                  <p className="text-xs text-gray-500">{new Date(report.created_at).toLocaleDateString('en-GB')}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
+                    {report.title}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(report.created_at).toLocaleDateString("en-GB")}
+                  </p>
                 </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-1000">{report.report_status}</span>
+
+                {/* Status */}
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 dark:hover:text-gray-100">
+                  {report.report_status}
+                </span>
               </li>
             ))}
           </ul>
         </div>
-        
+
         {/* Recent Payments */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
@@ -1226,30 +1350,42 @@ const ProjectsContent = ({
   fetchProjects();
 
   return (
-    <div className="bg-white rounded-lg shadow dark:bg-gray-800">
+    <div className="bg-white rounded-lg shadow">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg text-black font-medium dark:text-white">Project Management</h3>
+        <h3 className="text-lg text-black font-medium">Project Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 dark:bg-gray-800 dark:text-whit">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Project Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Due Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Payment
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
+          <tbody className="bg-white divide-y divide-gray-200">
             {projects && projects.length > 0 ? (
               projects.map((project) => (
-                <tr key={project.project_id} className="hover:bg-blue-50 dark:hover:bg-gray-600">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 dark:text-white">
+                <tr key={project.project_id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
                     {project.project_code}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {project.project_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1261,7 +1397,7 @@ const ProjectsContent = ({
                       {project.project_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(project.delivery_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1280,7 +1416,7 @@ const ProjectsContent = ({
                           setSelectedProject(project);
                           setShowViewModal(true);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900 dark:text-white"
+                        className="text-indigo-600 hover:text-indigo-900"
                       >
                         View
                       </button>
@@ -1321,7 +1457,10 @@ const ProjectsContent = ({
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td
+                  colSpan="6"
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
                   No projects found
                 </td>
               </tr>
@@ -1482,35 +1621,52 @@ const ReportsContent = ({
   fetchReports();
 
   return (
-    <div className="bg-white rounded-lg shadow dark:bg-gray-800">
+    <div className="bg-white rounded-lg shadow">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg text-black font-medium dark:text-white">Report Management</h3>
+        <h3 className="text-lg text-black font-medium">Report Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Report Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Generated Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
+          <tbody className="bg-white divide-y divide-gray-200">
             {reports && reports.length > 0 ? (
               reports.map((report, index) => (
-                <tr key={report.report_id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.report_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.title}</td>
+                <tr
+                  key={report.report_id || index}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(report.created_at).toLocaleDateString('en-GB')}
+                    {report.report_id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {report.title}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(report.created_at).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusBadge status={report.report_status || "No Status"} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button 
+                    <button
                       className="text-indigo-600 hover:text-indigo-900 mr-3"
                       onClick={() => {
                         setSelectedReport(report);
@@ -1544,7 +1700,10 @@ const ReportsContent = ({
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td
+                  colSpan="6"
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
                   No reports found
                 </td>
               </tr>
@@ -1619,49 +1778,92 @@ const PaymentsContent = ({
   console.log("Payments:", payments);
 
   return (
-    <div className="bg-white rounded-lg shadow dark:bg-gray-800">
+    <div className="bg-white rounded-lg shadow">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-black dark:text-white">Payment Management</h3>
+        <h3 className="text-lg font-medium text-black">Payment Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refund Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Payment ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Project ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Project Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Paid Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Pending Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Refund Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
+          <tbody className="bg-white divide-y divide-gray-200">
             {payments.length > 0 ? (
               payments.map((payment, index) => (
-                <tr key={payment.payment_id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{payment.payment_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_code}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ₹{isNaN(payment.total_amount) ? "0.00" : Number(payment.total_amount).toFixed(2)}
+                <tr
+                  key={payment.payment_id || index}
+                  className="hover:bg-gray-50"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    {payment.payment_id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ₹{isNaN(payment.paid_amount) ? "0.00" : Number(payment.paid_amount).toFixed(2)}
+                    {payment.project_code}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {payment.project_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ₹
+                    {isNaN(payment.total_amount)
+                      ? "0.00"
+                      : Number(payment.total_amount).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ₹
+                    {isNaN(payment.paid_amount)
+                      ? "0.00"
+                      : Number(payment.paid_amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <PaymentStatusBadge status={payment.payment_status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ₹{isNaN(payment.pending_amount) ? "0.00" : Number(payment.pending_amount).toFixed(2)}
+                    ₹
+                    {isNaN(payment.pending_amount)
+                      ? "0.00"
+                      : Number(payment.pending_amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ₹{isNaN(payment.refund_amt) ? "0.00" : Number(payment.refund_amt).toFixed(2)}
+                    ₹
+                    {isNaN(payment.refund_amt)
+                      ? "0.00"
+                      : Number(payment.refund_amt).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(payment.created_at).toLocaleDateString('en-GB')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(payment.created_at).toLocaleDateString("en-GB")}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {
                       <button
@@ -1676,7 +1878,10 @@ const PaymentsContent = ({
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td
+                  colSpan="10"
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
                   No payments found
                 </td>
               </tr>

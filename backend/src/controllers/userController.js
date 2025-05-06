@@ -203,4 +203,14 @@ exports.submitMultistepData = async (req, res) => {
       console.error("Multistep form submission error:", error);
       res.status(500).json({ error: "Server error submitting multistep form data" });
     }
-  };  
+  };
+
+exports.getAllDomains = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`SELECT domain_id, domain_name, pdf_url FROM domains`);
+    res.status(200).json({ domains: rows });
+  } catch (error) {
+    console.error("Get Domains Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
