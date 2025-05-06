@@ -23,6 +23,9 @@ export default function AdminDashboard() {
   const [projectStatusFilter, setProjectStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [startDateFilter, setStartDateFilter] = useState(""); 
+  const [endDateFilter, setEndDateFilter] = useState("");
+
   
   const local_uri = "http://localhost:8000";
   const router = useRouter();
@@ -133,7 +136,6 @@ export default function AdminDashboard() {
 
   // Enhanced filtering logic for projects
   const filteredProjects = projects.filter(project => {
-    // First apply the search query to multiple fields
     const searchMatches = searchQuery === '' || 
       (project.project_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (project.domain || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,17 +144,30 @@ export default function AdminDashboard() {
       (project.student_email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (project.student_id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (project.student_phone || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Then apply the status filters
+  
     const projectStatusMatches = projectStatusFilter === '' || 
       (project.project_status || "").toLowerCase() === projectStatusFilter.toLowerCase();
-    
+  
     const paymentStatusMatches = paymentStatusFilter === '' || 
       (project.payment_status || "").toLowerCase() === paymentStatusFilter.toLowerCase();
-    
-    // Return true only if all conditions are met
-    return searchMatches && projectStatusMatches && paymentStatusMatches;
-  });
+  
+    let matchesDateRange = true;
+    if (startDateFilter && project.createdAt) {
+      const projectDate = new Date(project.createdAt);
+      const filterStartDate = new Date(startDateFilter);
+      filterStartDate.setHours(0, 0, 0, 0); // normalize
+      matchesDateRange = projectDate >= filterStartDate;
+    }
+  
+    if (endDateFilter && project.createdAt && matchesDateRange) {
+      const projectDate = new Date(project.createdAt);
+      const filterEndDate = new Date(endDateFilter);
+      filterEndDate.setHours(23, 59, 59, 999); // inclusive
+      matchesDateRange = projectDate <= filterEndDate;
+    }
+  
+    return searchMatches && projectStatusMatches && paymentStatusMatches && matchesDateRange;
+  });  
   
   // Extract unique status values for filter dropdowns
   const projectStatuses = [...new Set(projects.map(p => p.project_status).filter(Boolean))];
@@ -192,9 +207,11 @@ export default function AdminDashboard() {
 
   // Reset filters function
   const resetFilters = () => {
-    setSearchQuery('');
-    setProjectStatusFilter('');
-    setPaymentStatusFilter('');
+    setSearchQuery("");
+    setProjectStatusFilter("");
+    setPaymentStatusFilter("");
+    setStartDateFilter("");
+    setEndDateFilter("");
   };
   
   return (
@@ -266,86 +283,98 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
         <header className="bg-white shadow-sm z-10 dark:bg-gray-800 text-black">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <h2 className="text-lg text-black font-medium  dark:text-white">
-              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
-            </h2>
-           
-            <div className="flex items-center space-x-4">
-              {/* Search and filter section */}
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  placeholder="Search projects, students, IDs..."
-                  className="w-64 pl-10 pr-4 py-2 rounded-lg border text-black  dark:text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
-                
-                {/* Filter button */}
-                <button 
-                  className={`ml-2 p-2 rounded-lg text-black border border-gray-300  dark:text-white hover:bg-gray-100 dark:hover:bg-black ${showFilters ? 'bg-blue-50' : ''}`}
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  {/* <Filter size={18} /> */}
-                  <Filter size={18}/>
-                </button>
+  <div className="px-4 py-3 flex items-center justify-between">
 
-                {/* Clear filters button - only visible when filters active */}
-                {(searchQuery || projectStatusFilter || paymentStatusFilter) && (
-                  <button 
-                    className="ml-2 p-2 rounded-lg text-red-500 border  dark:text-white border-gray-300 hover:bg-gray-100 dark:hover:bg-black"
-                    onClick={resetFilters}
-                    title="Clear filters"
-                  >
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
-              
-              {/* Notifications */}
-              {/* <button className="p-2 rounded-full text-black  dark:text-white hover:bg-gray-100 dark:hover:bg-black">
-                <Bell size={20} />
-              </button> */}
-             
-              <Button onClick={handleLogout} className="cursor-pointer"><LogOutIcon/>Logout</Button>
-            </div>
-          </div>
+    <h2 className="text-lg text-black font-medium dark:text-white">
+      {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+    </h2>
+    <div className="flex items-center space-x-4">
+      {/* Search and filter section */}
+      <div className="relative flex items-center">
+      
+        <input
+          type="text"
+          placeholder="Search projects, students, IDs..."
+          className="w-64 pl-10 pr-4 py-2 rounded-lg border text-black dark:text-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
+        
+        {/* Filter button */}
+        <button 
+          className={`ml-2 p-2 rounded-lg text-black border border-gray-300 dark:text-white hover:bg-gray-100 dark:hover:bg-black ${showFilters ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <Filter size={18}/>
+        </button>
 
-          {/* Filter dropdown section - only visible for projects */}
-          {showFilters && activeSection === 'projects' && (
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4">
-              <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">Project Status:</label>
-                <select 
-                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
-                  value={projectStatusFilter}
-                  onChange={(e) => setProjectStatusFilter(e.target.value)}
-                >
-                  <option value="">All</option>
-                  {projectStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
+        {/* Clear filters button - only visible when filters active */}
+        {(searchQuery || projectStatusFilter || paymentStatusFilter || startDateFilter || endDateFilter) && (
+          <button 
+            className="ml-2 p-2 rounded-lg text-red-500 border dark:text-white border-gray-300 hover:bg-gray-100 dark:hover:bg-black"
+            onClick={resetFilters}
+            title="Clear filters"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+      <Button onClick={handleLogout} className="cursor-pointer"><LogOutIcon/>Logout</Button>
+    </div>
+  </div>
 
-              <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">Payment Status:</label>
-                <select 
-                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
-                  value={paymentStatusFilter}
-                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                >
-                  <option value="">All</option>
-                  {paymentStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-        </header>
+  {/* Filter dropdown section - only visible for projects */}
+  {showFilters && activeSection === 'projects' && (
+    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex flex-wrap gap-4">
+      <div className="flex items-center">
+        <label className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-200">Project Status:</label>
+        <select 
+          className="p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-black dark:text-white dark:bg-gray-800"
+          value={projectStatusFilter}
+          onChange={(e) => setProjectStatusFilter(e.target.value)}
+        >
+          <option value="">All</option>
+          {projectStatuses.map(status => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex items-center">
+        <label className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-200">Payment Status:</label>
+        <select 
+          className="p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-black dark:text-white dark:bg-gray-800"
+          value={paymentStatusFilter}
+          onChange={(e) => setPaymentStatusFilter(e.target.value)}
+        >
+          <option value="">All</option>
+          {paymentStatuses.map(status => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex items-center">
+        <label className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-200">From:</label>
+        <input 
+          type="date" 
+          className="p-2 border border-gray-300 rounded-md text-sm text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+          value={startDateFilter}
+          onChange={(e) => setStartDateFilter(e.target.value)}
+        />
+      </div>
+      <div className="flex items-center">
+        <label className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-200">End:</label>
+        <input 
+          type="date" 
+          className="p-2 border border-gray-300 rounded-md text-sm text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+          value={endDateFilter}
+          onChange={(e) => setEndDateFilter(e.target.value)}
+        />
+      </div>
+    </div>
+  )}
+</header>
         
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-6">
@@ -630,26 +659,43 @@ const handleEditSubmit = async () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Reports */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="text-lg font-medium text-black dark:text-white">Recent Reports</h3>
+    <button
+      className="text-sm text-blue-600 hover:text-blue-800"
+      onClick={() => setActiveSection('reports')}
+    >
+      View All
+    </button>
+  </div>
 
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Recent Reports</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-800" onClick={() => setActiveSection('reports')}>View All</button>
-          </div>
-          <ul className="space-y-4">
-          {recentReports.map((report, index) => (
-              <li key={report.report_id || index} className="flex items-center p-3 hover:bg-gray-50 hover:dark:text-black text-white rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <BarChart2 size={16} className="text-blue-600" />
-                </div>
-                <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium text-black">{report.title}</p>
-                  <p className="text-xs text-gray-500">{new Date(report.created_at).toLocaleDateString('en-GB')}</p>
-                </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-1000">{report.report_status}</span>
-              </li>
-            ))}
-          </ul>
+  <ul className="space-y-4">
+    {recentReports.map((report, index) => (
+      <li
+        key={report.report_id || index}
+        className="flex items-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors"
+      >
+        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+          <BarChart2 size={16} className="text-blue-600" />
         </div>
+
+        <div className="ml-4 flex-1">
+          <p className="text-sm font-medium text-black dark:text-white group-hover:text-black dark:group-hover:text-white">
+            {report.title}
+          </p>
+          <p className="text-xs text-gray-500 group-hover:text-black dark:text-gray-400 dark:group-hover:text-white">
+            {new Date(report.created_at).toLocaleDateString('en-GB')}
+          </p>
+        </div>
+
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-black dark:group-hover:text-white">
+          {report.report_status}
+        </span>
+      </li>
+    ))}
+  </ul>
+</div>
+
         
         {/* Recent Payments */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -990,30 +1036,30 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection, setProjects })
   fetchProjects();
   
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white rounded-lg shadow dark:bg-gray-800">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg text-black font-medium">Project Management</h3>
+        <h3 className="text-lg text-black font-medium dark:text-white">Project Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-800 dark:text-whit">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Project Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Due Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Payment</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
             {projects && projects.length > 0 ? (
               projects.map((project) => (
-                <tr key={project.project_id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
+                <tr key={project.project_id} className="hover:bg-blue-50 dark:hover:bg-gray-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 dark:text-white">
                     {project.project_code}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">
                     {project.project_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1021,7 +1067,7 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection, setProjects })
                       {project.project_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">
                     {formatDate(project.delivery_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1036,7 +1082,7 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection, setProjects })
                           setSelectedProject(project);
                           setShowViewModal(true);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-indigo-600 hover:text-indigo-900 dark:text-white"
                       >
                         View
                       </button>
@@ -1077,7 +1123,7 @@ const ProjectsContent = ({ isLoading, projects, setActiveSection, setProjects })
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-white">
                   No projects found
                 </td>
               </tr>
@@ -1233,28 +1279,28 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
   fetchReports();
   
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white rounded-lg shadow dark:bg-gray-800">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg text-black font-medium">Report Management</h3>
+        <h3 className="text-lg text-black font-medium dark:text-white">Report Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Report Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Generated Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
             {reports && reports.length > 0 ? (
               reports.map((report, index) => (
-                <tr key={report.report_id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.report_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <tr key={report.report_id || index} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">{report.report_id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">{report.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">
                     {new Date(report.created_at).toLocaleDateString('en-GB')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1262,7 +1308,7 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button 
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      className="text-indigo-600 hover:text-indigo-900 mr-3 dark:text-white"
                       onClick={() => {
                         setSelectedReport(report);
                         setShowViewModal(true);
@@ -1295,7 +1341,7 @@ const ReportsContent = ({ isLoading, reports, setActiveSection, setReports }) =>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-white">
                   No reports found
                 </td>
               </tr>
@@ -1365,49 +1411,49 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest, onConfirmRefund
   console.log("Payments:", payments);
   
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white rounded-lg shadow dark:bg-gray-800">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-black">Payment Management</h3>
+        <h3 className="text-lg font-medium text-black dark:text-white">Payment Management</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refund Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Payment ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Project ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Project Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Total Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Paid Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Pending Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Refund Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-white">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
             {payments.length > 0 ? (
               payments.map((payment, index) => (
-                <tr key={payment.payment_id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{payment.payment_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_code}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.project_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={payment.payment_id || index} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium dark:text-white">{payment.payment_id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{payment.project_code}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{payment.project_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     ₹{isNaN(payment.total_amount) ? "0.00" : Number(payment.total_amount).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     ₹{isNaN(payment.paid_amount) ? "0.00" : Number(payment.paid_amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <PaymentStatusBadge status={payment.payment_status} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     ₹{isNaN(payment.pending_amount) ? "0.00" : Number(payment.pending_amount).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     ₹{isNaN(payment.refund_amt) ? "0.00" : Number(payment.refund_amt).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(payment.created_at).toLocaleDateString('en-GB')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-white">{new Date(payment.created_at).toLocaleDateString('en-GB')}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {(
                       <button 
@@ -1422,7 +1468,7 @@ const PaymentsContent = ({ isLoading, payments, onRefundRequest, onConfirmRefund
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-white">
                   No payments found
                 </td>
               </tr>

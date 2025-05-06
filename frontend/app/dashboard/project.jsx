@@ -58,14 +58,16 @@ export default function Dashboard() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [newDomain, setNewDomain] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
   const [showNewProject, setShowNewProject] = useState(false);
   const [showReportIssue, setShowReportIssue] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
 const [showViewDialog, setShowViewDialog] = useState(false);
 const [selectedPayment, setSelectedPayment] = useState(null);
 const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+const [selectedStatus, setSelectedStatus] = useState("All");
 
+const [projectStatusFilter, setProjectStatusFilter] = useState("All");
+const [reportStatusFilter, setReportStatusFilter] = useState("all");
   const handleLogout = () => {
     localStorage.removeItem("token");
 
@@ -150,6 +152,10 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   }, [activeSection]);
   
   useEffect(() => {
+    setSelectedStatus("All"); // reset filter to 'All' when Projects component loads
+  }, []);
+
+  useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth < 768) {
@@ -205,6 +211,13 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
     setActiveSection(section);
     setShowNewProject(false);
     setShowReportIssue(false);
+    
+    // Reset appropriate filters based on the section
+    if (section === "projects") {
+      setProjectStatusFilter("All");
+    } else if (section === "reports") {
+      setReportStatusFilter("all");
+    }
   };
 
   const toggleSidebar = () => {
@@ -254,7 +267,7 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
       project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.domain?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
+      const matchesStatus = projectStatusFilter === "All" || project.status === projectStatusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -278,6 +291,7 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [searchTerm, setSearchTerm] = useState(''); // Default to show all tickets
   const [selectedProjectForDetails, setSelectedProjectForDetails] = useState(null);
+
 
   // For file downloads
   const handleFileDownload = (fileUrl) => {
@@ -320,9 +334,9 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
     let filtered = [...reports];
     
     // Apply status filter
-    if (statusFilter !== 'All') {
+    if (reportStatusFilter !== 'all') {
       filtered = filtered.filter(ticket => 
-        ticket.report_status.toLowerCase() === statusFilter.toLowerCase()
+        ticket.report_status.toLowerCase() === reportStatusFilter.toLowerCase()
       );
     }
     
@@ -336,7 +350,7 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
     }
     
     setFilteredTickets(filtered);
-  }, [reports, searchTerm, statusFilter]);
+  }, [reports, searchTerm, reportStatusFilter]);
 
   // Function to handle viewing a ticket
   const handleViewTicket = (ticket) => {
@@ -490,7 +504,7 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
         </div>
 
         {/* Status Filter */}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={projectStatusFilter} onValueChange={setProjectStatusFilter}>
           <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -817,8 +831,8 @@ const [showPaymentDialog, setShowPaymentDialog] = useState(false);
           {/* Status filter */}
           <select
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={reportStatusFilter}
+onChange={(e) => setReportStatusFilter(e.target.value)}
           >
             <option value="all">All</option>
             <option value="open">Open</option>

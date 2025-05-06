@@ -156,7 +156,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b">
-          <h3 className="text-lg font-medium flex items-center">
+          <h3 className="text-lg font-medium flex items-center ">
             {isEditing ? <Edit size={18} className="mr-2" /> : <Eye size={18} className="mr-2" />}
             {isEditing ? 'Edit Project' : 'View Project'}
           </h3>
@@ -164,7 +164,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="mr-3 text-blue-600 hover:text-blue-800 flex items-center"
+                className="mr-3 text-blue-600 hover:text-blue-800 flex items-center dark:text-white dark:hover:text-blue-400"
               >
                 <Edit size={16} className="mr-1" /> Edit
               </button>
@@ -181,18 +181,18 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
         <div className="p-6 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium mb-1">Project ID</label>
+              <label className="block text-sm font-medium mb-1 ">Project ID</label>
               {isEditing ? (
                 <input
                   type="text"
                   name="project_id"
                   value={editedProject.project_code || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
                   disabled
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.project_code || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.project_code || 'N/A'}</p>
               )}
             </div>
             
@@ -204,10 +204,10 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   name="project_name"
                   value={editedProject.project_name || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white "
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.project_name || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.project_name || 'N/A'}</p>
               )}
             </div>
 
@@ -219,15 +219,15 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   name="domain"
                   value={editedProject.domain || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.domain || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.domain || 'N/A'}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Payment Status</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.payment_status || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.payment_status || 'N/A'}</p>
             </div>
 
             <div>
@@ -238,10 +238,10 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   name="delivery_date"
                   value={editedProject.delivery_date ? new Date(editedProject.delivery_date).toISOString().split('T')[0] : ''}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                   {project.delivery_date ? new Date(project.delivery_date).toLocaleDateString() : 'N/A'}
                 </p>
               )}
@@ -291,37 +291,37 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Student Name</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                       {project.full_name || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Student ID</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                       {project.user_id || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Email</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                       {project.user_email || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">College</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                       {project.college["name"] || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Branch</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                       {project.college["branch"] || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Field</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                       {project.college["domain"] || 'Not Available'}
                     </p>
                   </div>
@@ -376,7 +376,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           {project.admin_notes && (
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Previous Note</label>
-            <p className="p-3 border border-gray-200 rounded bg-yellow-50">{project.admin_notes}</p>
+            <p className="p-3 border border-gray-200 rounded bg-yellow-50 dark:bg-gray-800 dark:text-white">{project.admin_notes}</p>
           </div>
         )}
 
@@ -403,7 +403,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center p-4 border-t bg-gray-50">
+        <div className="flex justify-between items-center p-4 border-t bg-gray-50 dark:bg-gray-800 dark:text-white">
           {isEditing ? (
             <>
               <button
@@ -423,7 +423,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             <>
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 border border-gray-300 rounded text-gray-200 hover:bg-gray-100 hover:text-gray-700"
               >
                 Close
               </button>
@@ -458,69 +458,76 @@ export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium flex items-center">
-            <Check size={18} className="mr-2 text-green-600" />
-            Approve Project
-          </h3>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="mb-6">
-          <p className="mb-4">You are about to approve the following project:</p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
-            <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
-            <p><span className="font-medium">Domain:</span> {project.domain}</p>
-          </div>
-          
-          <div className="mb-4">
-            <label htmlFor="price" className="block text-sm font-medium mb-1">
-              Enter Price Amount (₹)
-            </label>
-            <input
-              type="number"
-              id="price"
-              value={price}
-              onChange={(e) => {
-                setPrice(e.target.value);
-                setError('');
-              }}
-              min="1"
-              step="0.01"
-              className={`w-full p-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="Enter amount"
-            />
-            {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
-          </div>
-          
-          <p className="text-sm text-gray-500">
-            Once approved, the student will be notified about the project acceptance and payment details.
-          </p>
-        </div>
-        
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
-            Approve Project
-          </button>
-        </div>
-      </div>
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
+    {/* Header */}
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-lg font-medium text-black dark:text-white flex items-center">
+        <Check size={18} className="mr-2 text-green-600" />
+        Approve Project
+      </h3>
+      <button 
+        onClick={onClose}
+        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+      >
+        <X size={20} />
+      </button>
     </div>
+
+    {/* Project Info */}
+    <div className="mb-6 text-black dark:text-gray-100">
+      <p className="mb-4">You are about to approve the following project:</p>
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+        <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
+        <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
+        <p><span className="font-medium">Domain:</span> {project.domain}</p>
+      </div>
+
+      {/* Price Input */}
+      <div className="mb-4">
+        <label htmlFor="price" className="block text-sm font-medium mb-1">
+          Enter Price Amount (₹)
+        </label>
+        <input
+          type="number"
+          id="price"
+          value={price}
+          onChange={(e) => {
+            setPrice(e.target.value);
+            setError('');
+          }}
+          min="1"
+          step="0.01"
+          className={`w-full p-2 border ${
+            error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } rounded bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          placeholder="Enter amount"
+        />
+        {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
+      </div>
+
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        Once approved, the student will be notified about the project acceptance and payment details.
+      </p>
+    </div>
+
+    {/* Actions */}
+    <div className="flex justify-end space-x-3">
+      <button
+        onClick={onClose}
+        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+      >
+        Approve Project
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 };
 
@@ -539,68 +546,77 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium flex items-center">
-            <AlertCircle size={18} className="mr-2 text-yellow-600" />
-            Reject Project
-          </h3>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="mb-6">
-          <p className="mb-4">You are about to reject the following project:</p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
-            <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
-            <p><span className="font-medium">Domain:</span> {project.domain}</p>
-          </div>
-          
-          <div className="mb-4">
-            <label htmlFor="reason" className="block text-sm font-medium mb-1">
-              Reason for Rejection
-            </label>
-            <textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value);
-                setError('');
-              }}
-              rows="4"
-              className={`w-full p-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="Please provide a detailed reason for rejecting this project"
-            ></textarea>
-            {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
-          </div>
-          
-          <p className="text-sm text-gray-500">
-            The student will be notified about the rejection with the reason you provide.
-          </p>
-        </div>
-        
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-yellow-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-          >
-            Reject Project
-          </button>
-        </div>
-      </div>
+   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
+    
+    {/* Header */}
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-lg font-medium text-black dark:text-white flex items-center">
+        <AlertCircle size={18} className="mr-2 text-yellow-600" />
+        Reject Project
+      </h3>
+      <button 
+        onClick={onClose}
+        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+      >
+        <X size={20} />
+      </button>
     </div>
+    
+    {/* Project Info */}
+    <div className="mb-6 text-black dark:text-gray-100">
+      <p className="mb-4">You are about to reject the following project:</p>
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+        <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
+        <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
+        <p><span className="font-medium">Domain:</span> {project.domain}</p>
+      </div>
+
+      {/* Rejection Reason */}
+      <div className="mb-4">
+        <label htmlFor="reason" className="block text-sm font-medium mb-1">
+          Reason for Rejection
+        </label>
+        <textarea
+          id="reason"
+          value={reason}
+          onChange={(e) => {
+            setReason(e.target.value);
+            setError('');
+          }}
+          rows="4"
+          className={`w-full p-2 border ${
+            error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } rounded bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          placeholder="Please provide a detailed reason for rejecting this project"
+        ></textarea>
+        {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
+      </div>
+
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        The student will be notified about the rejection with the reason you provide.
+      </p>
+    </div>
+
+    {/* Actions */}
+    <div className="flex justify-end space-x-3">
+      <button
+        onClick={onClose}
+        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        className="px-4 py-2 bg-yellow-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+      >
+        Reject Project
+      </button>
+    </div>
+    
+  </div>
+</div>
+
   );
 };
 
@@ -624,7 +640,7 @@ export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, war
         
         <div className="mb-6">
           <p className="mb-4">Are you sure you want to delete this {itemType}?</p>
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800 dark:text-white">
             {itemType === 'project' && (
               <>
                 <p><span className="font-medium">ID:</span> {item.project_id}</p>
@@ -654,7 +670,7 @@ export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, war
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-200 hover:bg-gray-50 hover:text-gray-700"
           >
             Cancel
           </button>
@@ -766,31 +782,31 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Report ID</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{report.report_id || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{report.report_id || 'N/A'}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Title</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">{report.title || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{report.title || 'N/A'}</p>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Status</label>
-                <div className="p-2 border border-gray-200 rounded bg-gray-50">
+                <div className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                   <StatusBadge status={report.report_status || "No Status"} />
                 </div>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Date Created</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50">
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
                   {report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A'}
                 </p>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
-                <div className="p-3 border border-gray-200 rounded bg-gray-50 min-h-24 whitespace-pre-wrap">
+                <div className="p-3 border border-gray-200 rounded bg-gray-50 min-h-24 whitespace-pre-wrap dark:bg-gray-800 dark:text-white">
                   {report.description || 'No description provided.'}
                 </div>
               </div>
@@ -845,10 +861,10 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             </div>
           </div>
   
-          <div className="flex justify-end p-4 border-t bg-gray-50">
+          <div className="flex justify-end p-4 border-t bg-gray-50 dark:bg-gray-800 dark:text-white">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+              className="px-4 py-2 border border-gray-300 rounded bg-red-500 text-gray-200 dark:text-gray-200  hover:text-gray-700"
             >
               Close
             </button>
@@ -878,13 +894,13 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           
           <div className="mb-6">
             <p className="mb-4">Are you sure you want to close this report?</p>
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800 dark:text-white">
               <p><span className="font-medium">Report ID:</span> {report.report_id}</p>
               <p><span className="font-medium">Title:</span> {report.title}</p>
               <p><span className="font-medium">Status:</span> <StatusBadge status={report.report_status} /></p>
             </div>
             
-            <p className="mt-4 text-sm text-gray-500">
+            <p className="mt-4 text-sm text-gray-500 ">
               Closing this report will mark it as resolved. It can still be viewed but won't appear in active reports.
             </p>
           </div>
@@ -892,7 +908,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 hover:text-gray-700"
             >
               Cancel
             </button>
@@ -931,7 +947,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           
           <div className="mb-6">
             <p className="mb-4">Are you sure you want to delete this report?</p>
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800 dark:text-white">
               <p><span className="font-medium">Report ID:</span> {report.report_id}</p>
               <p><span className="font-medium">Title:</span> {report.title}</p>
               <p><span className="font-medium">Status:</span> <StatusBadge status={report.report_status} /></p>
@@ -946,7 +962,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 hover:text-gray-700"
             >
               Cancel
             </button>
