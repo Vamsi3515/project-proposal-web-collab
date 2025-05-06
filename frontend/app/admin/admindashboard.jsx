@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   const [reportStatusFilter, setReportStatusFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFilterType, setDateFilterType] = useState("delivery"); // delivery or created
+  const [dateFilterType, setDateFilterType] = useState("delivery");
 const [startDate, setStartDate] = useState("");
 const [endDate, setEndDate] = useState("");
 
@@ -49,11 +49,10 @@ const [endDate, setEndDate] = useState("");
   const router = useRouter();
 
   const handleSectionChange = (section) => {
-    resetFilters(); // This uses your existing resetFilters function
+    resetFilters();
     setActiveSection(section);
   };
 
-  // Fetch data when component mounts
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
