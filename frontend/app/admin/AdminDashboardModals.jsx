@@ -192,7 +192,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   disabled
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.project_code || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">{project.project_code || 'N/A'}</p>
               )}
             </div>
             
@@ -207,7 +207,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white "
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.project_name || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.project_name || 'N/A'}</p>
               )}
             </div>
 
@@ -222,12 +222,12 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.domain || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.domain || 'N/A'}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Payment Status</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{project.payment_status || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">{project.payment_status || 'N/A'}</p>
             </div>
 
             <div>
@@ -241,7 +241,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   className="w-full p-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
                 />
               ) : (
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">
                   {project.delivery_date ? new Date(project.delivery_date).toLocaleDateString() : 'N/A'}
                 </p>
               )}
@@ -270,7 +270,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 text-sm">No documents available</p>
+                <p className="text-gray-500 text-sm dark:bg-gray-800">No documents available</p>
               )}
             </div>
           </div>
@@ -291,37 +291,37 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Student Name</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
                       {project.full_name || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Student ID</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
                       {project.user_id || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Email</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
                       {project.user_email || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">College</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
                       {project.college["name"] || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Branch</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
                       {project.college["branch"] || 'Not Available'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Field</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <p className="p-2 border border-gray-200 rounded bg-gray-50">
                       {project.college["domain"] || 'Not Available'}
                     </p>
                   </div>
@@ -376,7 +376,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           {project.admin_notes && (
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Previous Note</label>
-            <p className="p-3 border border-gray-200 rounded bg-yellow-50 dark:bg-gray-800 dark:text-white">{project.admin_notes}</p>
+            <p className="p-3 border border-gray-200 rounded bg-yellow-50">{project.admin_notes}</p>
           </div>
         )}
 
@@ -403,12 +403,12 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center p-4 border-t bg-gray-50 dark:bg-gray-800 dark:text-white">
+        <div className="flex justify-between items-center p-4 border-t bg-gray-50">
           {isEditing ? (
             <>
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 border border-gray-300 rounded text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 "
               >
                 Cancel
               </button>
@@ -423,7 +423,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             <>
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded text-gray-200 hover:bg-gray-100 hover:text-gray-700"
+                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
               >
                 Close
               </button>
@@ -458,76 +458,69 @@ export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
-    {/* Header */}
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-medium text-black dark:text-white flex items-center">
-        <Check size={18} className="mr-2 text-green-600" />
-        Approve Project
-      </h3>
-      <button 
-        onClick={onClose}
-        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
-      >
-        <X size={20} />
-      </button>
-    </div>
-
-    {/* Project Info */}
-    <div className="mb-6 text-black dark:text-gray-100">
-      <p className="mb-4">You are about to approve the following project:</p>
-      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
-        <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
-        <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
-        <p><span className="font-medium">Domain:</span> {project.domain}</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium flex items-center">
+            <Check size={18} className="mr-2 text-green-600" />
+            Approve Project
+          </h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="mb-6">
+          <p className="mb-4">You are about to approve the following project:</p>
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
+            <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
+            <p><span className="font-medium">Domain:</span> {project.domain}</p>
+          </div>
+          
+          <div className="mb-4">
+            <label htmlFor="price" className="block text-sm font-medium mb-1">
+              Enter Price Amount (₹)
+            </label>
+            <input
+              type="number"
+              id="price"
+              value={price}
+              onChange={(e) => {
+                setPrice(e.target.value);
+                setError('');
+              }}
+              min="1"
+              step="0.01"
+              className={`w-full p-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              placeholder="Enter amount"
+            />
+            {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
+          </div>
+          
+          <p className="text-sm text-gray-500">
+            Once approved, the student will be notified about the project acceptance and payment details.
+          </p>
+        </div>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Approve Project
+          </button>
+        </div>
       </div>
-
-      {/* Price Input */}
-      <div className="mb-4">
-        <label htmlFor="price" className="block text-sm font-medium mb-1">
-          Enter Price Amount (₹)
-        </label>
-        <input
-          type="number"
-          id="price"
-          value={price}
-          onChange={(e) => {
-            setPrice(e.target.value);
-            setError('');
-          }}
-          min="1"
-          step="0.01"
-          className={`w-full p-2 border ${
-            error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-          } rounded bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          placeholder="Enter amount"
-        />
-        {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
-      </div>
-
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Once approved, the student will be notified about the project acceptance and payment details.
-      </p>
     </div>
-
-    {/* Actions */}
-    <div className="flex justify-end space-x-3">
-      <button
-        onClick={onClose}
-        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-      >
-        Approve Project
-      </button>
-    </div>
-  </div>
-</div>
-
   );
 };
 
@@ -546,77 +539,68 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
   };
 
   return (
-   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
-    
-    {/* Header */}
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-medium text-black dark:text-white flex items-center">
-        <AlertCircle size={18} className="mr-2 text-yellow-600" />
-        Reject Project
-      </h3>
-      <button 
-        onClick={onClose}
-        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
-      >
-        <X size={20} />
-      </button>
-    </div>
-    
-    {/* Project Info */}
-    <div className="mb-6 text-black dark:text-gray-100">
-      <p className="mb-4">You are about to reject the following project:</p>
-      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
-        <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
-        <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
-        <p><span className="font-medium">Domain:</span> {project.domain}</p>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium flex items-center">
+            <AlertCircle size={18} className="mr-2 text-yellow-600" />
+            Reject Project
+          </h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="mb-6">
+          <p className="mb-4">You are about to reject the following project:</p>
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <p><span className="font-medium">Project ID:</span> {project.project_code}</p>
+            <p><span className="font-medium">Project Name:</span> {project.project_name}</p>
+            <p><span className="font-medium">Domain:</span> {project.domain}</p>
+          </div>
+          
+          <div className="mb-4">
+            <label htmlFor="reason" className="block text-sm font-medium mb-1">
+              Reason for Rejection
+            </label>
+            <textarea
+              id="reason"
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setError('');
+              }}
+              rows="4"
+              className={`w-full p-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              placeholder="Please provide a detailed reason for rejecting this project"
+            ></textarea>
+            {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
+          </div>
+          
+          <p className="text-sm text-gray-500">
+            The student will be notified about the rejection with the reason you provide.
+          </p>
+        </div>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-yellow-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+          >
+            Reject Project
+          </button>
+        </div>
       </div>
-
-      {/* Rejection Reason */}
-      <div className="mb-4">
-        <label htmlFor="reason" className="block text-sm font-medium mb-1">
-          Reason for Rejection
-        </label>
-        <textarea
-          id="reason"
-          value={reason}
-          onChange={(e) => {
-            setReason(e.target.value);
-            setError('');
-          }}
-          rows="4"
-          className={`w-full p-2 border ${
-            error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-          } rounded bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          placeholder="Please provide a detailed reason for rejecting this project"
-        ></textarea>
-        {error && <p className="mt-1 text-red-500 text-sm">{error}</p>}
-      </div>
-
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        The student will be notified about the rejection with the reason you provide.
-      </p>
     </div>
-
-    {/* Actions */}
-    <div className="flex justify-end space-x-3">
-      <button
-        onClick={onClose}
-        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        className="px-4 py-2 bg-yellow-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-      >
-        Reject Project
-      </button>
-    </div>
-    
-  </div>
-</div>
-
   );
 };
 
@@ -640,7 +624,7 @@ export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, war
         
         <div className="mb-6">
           <p className="mb-4">Are you sure you want to delete this {itemType}?</p>
-          <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800 dark:text-white">
+          <div className="bg-gray-50 p-4 rounded-lg">
             {itemType === 'project' && (
               <>
                 <p><span className="font-medium">ID:</span> {item.project_id}</p>
@@ -670,7 +654,7 @@ export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, war
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-200 hover:bg-gray-50 hover:text-gray-700"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </button>
@@ -782,31 +766,31 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Report ID</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{report.report_id || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">{report.report_id || 'N/A'}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Title</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">{report.title || 'N/A'}</p>
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">{report.title || 'N/A'}</p>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Status</label>
-                <div className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                <div className="p-2 border border-gray-200 rounded bg-gray-50">
                   <StatusBadge status={report.report_status || "No Status"} />
                 </div>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Date Created</label>
-                <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800 dark:text-white">
+                <p className="p-2 border border-gray-200 rounded bg-gray-50">
                   {report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A'}
                 </p>
               </div>
   
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
-                <div className="p-3 border border-gray-200 rounded bg-gray-50 min-h-24 whitespace-pre-wrap dark:bg-gray-800 dark:text-white">
+                <div className="p-3 border border-gray-200 rounded bg-gray-50 min-h-24 whitespace-pre-wrap">
                   {report.description || 'No description provided.'}
                 </div>
               </div>
@@ -861,10 +845,10 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             </div>
           </div>
   
-          <div className="flex justify-end p-4 border-t bg-gray-50 dark:bg-gray-800 dark:text-white">
+          <div className="flex justify-end p-4 border-t bg-gray-50">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded bg-red-500 text-gray-200 dark:text-gray-200  hover:text-gray-700"
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
             >
               Close
             </button>
@@ -894,7 +878,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           
           <div className="mb-6">
             <p className="mb-4">Are you sure you want to close this report?</p>
-            <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800 dark:text-white">
+            <div className="bg-gray-50 p-4 rounded-lg">
               <p><span className="font-medium">Report ID:</span> {report.report_id}</p>
               <p><span className="font-medium">Title:</span> {report.title}</p>
               <p><span className="font-medium">Status:</span> <StatusBadge status={report.report_status} /></p>
@@ -908,7 +892,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 hover:text-gray-700"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -947,7 +931,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           
           <div className="mb-6">
             <p className="mb-4">Are you sure you want to delete this report?</p>
-            <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-800 dark:text-white">
+            <div className="bg-gray-50 p-4 rounded-lg">
               <p><span className="font-medium">Report ID:</span> {report.report_id}</p>
               <p><span className="font-medium">Title:</span> {report.title}</p>
               <p><span className="font-medium">Status:</span> <StatusBadge status={report.report_status} /></p>
@@ -962,7 +946,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 hover:text-gray-700"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -988,73 +972,78 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
     const isPending = payment.payment_status === "pending";
   
     return (
-      <div className="fixed inset-0 bg-gray-200 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-        <div className="relative bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-black">Confirm Refund</h3>
-          </div>
-  
-          <div className="p-6">
-            {isPending && (
-              <div className="flex items-start bg-yellow-50 border border-yellow-300 text-yellow-800 p-3 rounded mb-4">
-                <AlertTriangle className="mr-2 mt-0.5" size={20} />
-                <span>
-                  This user has not paid anything yet. Refund is not required.
-                </span>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4">
+        
+        {/* Modal Header */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-medium text-black dark:text-white">Confirm Refund</h3>
+        </div>
+    
+        {/* Modal Body */}
+        <div className="p-6">
+          {isPending && (
+            <div className="flex items-start bg-yellow-50 dark:bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded mb-4">
+              <AlertTriangle className="mr-2 mt-0.5" size={20} />
+              <span>
+                This user has not paid anything yet. Refund is not required.
+              </span>
+            </div>
+          )}
+    
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Project ID:</div>
+              <div className="text-sm text-gray-900 dark:text-white">{payment.project_code}</div>
+    
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Project Name:</div>
+              <div className="text-sm text-gray-900 dark:text-white">{payment.project_name}</div>
+    
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Username:</div>
+              <div className="text-sm text-gray-900 dark:text-white">{payment.student_name || 'Not available'}</div>
+    
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Date:</div>
+              <div className="text-sm text-gray-900 dark:text-white">
+                {new Date(payment.created_at).toLocaleDateString('en-GB')}
               </div>
-            )}
-  
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-sm font-medium text-gray-500">Project ID:</div>
-                <div className="text-sm text-gray-900">{payment.project_code}</div>
-  
-                <div className="text-sm font-medium text-gray-500">Project Name:</div>
-                <div className="text-sm text-gray-900">{payment.project_name}</div>
-  
-                <div className="text-sm font-medium text-gray-500">Username:</div>
-                <div className="text-sm text-gray-900">{payment.student_name || 'Not available'}</div>
-  
-                <div className="text-sm font-medium text-gray-500">Date:</div>
-                <div className="text-sm text-gray-900">
-                  {new Date(payment.created_at).toLocaleDateString('en-GB')}
-                </div>
-  
-                <div className="text-sm font-medium text-gray-500">Deadline:</div>
-                <div className="text-sm text-gray-900">
-                  {payment.delivery_date ? new Date(payment.delivery_date).toLocaleDateString('en-GB') : 'Not available'}
-                </div>
-  
-                <div className="text-sm font-medium text-gray-500">Total Payment:</div>
-                <div className="text-sm text-gray-900">₹{Number(payment.total_amount || 0).toFixed(2)}</div>
-  
-                <div className="text-sm font-medium text-gray-500">Payment Paid:</div>
-                <div className="text-sm text-gray-900">₹{Number(payment.paid_amount || 0).toFixed(2)}</div>
+    
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Deadline:</div>
+              <div className="text-sm text-gray-900 dark:text-white">
+                {payment.delivery_date ? new Date(payment.delivery_date).toLocaleDateString('en-GB') : 'Not available'}
               </div>
+    
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Total Payment:</div>
+              <div className="text-sm text-gray-900 dark:text-white">₹{Number(payment.total_amount || 0).toFixed(2)}</div>
+    
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Payment Paid:</div>
+              <div className="text-sm text-gray-900 dark:text-white">₹{Number(payment.paid_amount || 0).toFixed(2)}</div>
             </div>
           </div>
-  
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <button 
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button 
-              disabled={isPending}
-              className={`px-4 py-2 rounded-md focus:outline-none ${
-                isPending 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-red-600 text-white hover:bg-red-700'
-              }`}
-              onClick={() => onConfirmRefund(payment)}
-            >
-              Confirm Refund
-            </button>
-          </div>
+        </div>
+    
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+          <button 
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button 
+            disabled={isPending}
+            className={`px-4 py-2 rounded-md focus:outline-none ${
+              isPending 
+              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+              : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+            onClick={() => onConfirmRefund(payment)}
+          >
+            Confirm Refund
+          </button>
         </div>
       </div>
+    </div>
+    
     );
   };
 

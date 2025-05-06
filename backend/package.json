@@ -18,10 +18,12 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.10"
   },
   "dependencies": {
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
+    "dependencies": "^0.0.1",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "multer": "^1.4.5-lts.2",
