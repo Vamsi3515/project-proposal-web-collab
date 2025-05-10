@@ -78,6 +78,8 @@ export default function Dashboard() {
   const [domains, setDomains] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [pendingAmount, setPendingAmount] = useState(0);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [invoices, setInvoices] = useState([]);
 
   const openModal = (projectId, paid_amt, tot_amt) => {
     const pending = tot_amt - paid_amt;
@@ -407,32 +409,22 @@ export default function Dashboard() {
   };
 
   // For invoice generation
-  const handleViewInvoice = async (project_code) => {
+  const handleViewInvoice = async (projectId) => {
+    const token = localStorage.getItem('token');
     try {
-      const token = localStorage.getItem("adminToken");
-      const response = await axios.get(
-        `${local_uri}/api/admin/invoice/${project_code}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`${local_uri}/api/payments/project/${projectId}/invoices`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      const invoiceUrl = response.data.invoiceUrl;
-
-      if (invoiceUrl) {
-        window.open(invoiceUrl, "_blank");
-      } else {
-        toast.info("No invoice available");
+      if (response.data.success) {
+        setInvoices(response.data.invoices);
+        setInvoiceModalOpen(true);
       }
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        toast.info("No invoice available for this project");
-      } else {
-        toast.error("Failed to open invoice");
-        console.error("Invoice error:", error);
-      }
+      console.error("Error fetching invoices:", error);
     }
   };
+
 
   // Filter tickets based on search term and status filter
   useEffect(() => {
@@ -1027,6 +1019,42 @@ export default function Dashboard() {
                       </button>
                     </DialogClose>
                   </div>
+
+                  {invoiceModalOpen && (
+                    <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
+                      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                        <h2 className="text-xl font-bold mb-4">Invoices</h2>
+                        <ul className="space-y-3 max-h-80 overflow-y-auto">
+                          {invoices.length > 0 ? (invoices.map((inv) => (
+                            <li key={inv.payment_id} className="flex justify-between items-center">
+                              <div>
+                                <p className="text-sm text-gray-700">
+                                  ₹{inv.paid_amount} - {inv.payment_method} - {new Date(inv.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <a
+                                href={`${local_uri}${inv.invoice_url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                              >
+                                View PDF
+                              </a>
+                            </li>
+                          ))) : (
+                            <p className="text-black dark:text-white">No payments done Yet.</p>
+                          )}
+                        </ul>
+                        <button
+                          onClick={() => setInvoiceModalOpen(false)}
+                          className="mt-4 w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               </DialogContent>
             </Dialog>
@@ -1419,7 +1447,7 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
             </div>
 
             {showPaymentDialog && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl overflow-hidden">
                   <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
                     <h3 className="text-lg font-medium">Payment Details</h3>
@@ -1490,6 +1518,19 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                           ₹{selectedPayment.pending_amount?.toLocaleString()}
                         </p>
                       </div>
+                      {selectedPayment.payment_status === 'success' ? (
+                        <button
+                        onClick={() =>
+                            selectedPayment.invoice_url ? open(`${local_uri}${selectedPayment.invoice_url}`) : toast.error("No invoice avaialble for this payment")
+                          }
+                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center"
+                        >
+                          <FileText size={16} className="mr-2" />
+                          View Invoice
+                      </button>
+                      ) : (
+                        <p className="text-orange-500 dark:text-white text-nowrap">No invoice avaialble for this payment</p>
+                      )}
                     </div>
 
                     {selectedPayment.payment_history &&

@@ -364,6 +364,8 @@ exports.getUserDashboardPayments = async (req, res) => {
       `SELECT 
         p.payment_id,
         p.order_id,
+        p.user_id,
+        p.invoice_url,
         p.project_id,
         pr.project_name,
         pr.project_code,
@@ -407,5 +409,25 @@ exports.getUserDashboardPayments = async (req, res) => {
   } catch (error) {
     console.error("Error fetching user dashboard payments:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getProjectInvoices = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const projectId = req.params.projectId;
+
+    const [invoices] = await pool.execute(
+      `SELECT payment_id, paid_amount, payment_method, invoice_url, payment_status, created_at
+       FROM payments
+       WHERE user_id = ? AND project_id = ? AND invoice_url IS NOT NULL
+       ORDER BY created_at DESC`,
+      [userId, projectId]
+    );
+
+    res.status(200).json({ success: true, invoices });
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve invoices" });
   }
 };

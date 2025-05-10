@@ -7,6 +7,7 @@ const crypto = require("crypto");
 router.get("/all", authenticateUser, paymentController.getUserDashboardPayments);
 router.get("/pending", authenticateUser, paymentController.getPendingPayments);
 router.get("/history", authenticateUser, paymentController.getPaymentHistory);
+router.get('/project/:projectId/invoices', authenticateUser, paymentController.getProjectInvoices);
 
 router.post('/create-payment-order', authenticateUser,paymentController.createPaymentOrder);
 

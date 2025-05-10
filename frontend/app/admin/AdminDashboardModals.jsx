@@ -1087,7 +1087,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-400 bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50">
       
       <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4">
         
