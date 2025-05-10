@@ -108,52 +108,61 @@ exports.verifyOTP = async (req, res) => {
     }
 };
 
-// Login
+
+//login user
 exports.loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        const [users] = await pool.execute("SELECT * FROM users WHERE email = ?", [email]);
-        if (users.length === 0) {
-            return res.status(400).json({ message: "Invalid email or password" });
-        }
-
-        const user = users[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid email or password" });
-        }
-
-        if (!user.is_verified) {
-            return res.status(401).json({ message: "Please verify your email to login" });
-        }
-
-        const [projects] = await pool.execute(
-            "SELECT COUNT(*) AS count FROM projects WHERE user_id = ?",
-            [user.user_id]
-        );
-        const hasProjects = projects[0].count > 0;
-
-        const token = jwt.sign({ id: user.user_id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-        return res.status(201).json({
-            message: "Login successful",
-            token,
-            user: {
-                id: user.user_id,
-                email: user.email,
-                role: user.role,
-                is_verified: user.is_verified
-            },
-            hasProjects
-        });
-
+      const { email, password } = req.body;
+  
+      const [users] = await pool.execute("SELECT * FROM users WHERE email = ?", [email]);
+      if (users.length === 0) {
+        return res.status(400).json({ message: "Invalid email or password" });
+      }
+  
+      const user = users[0];
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Invalid email or password" });
+      }
+  
+      if (!user.is_verified) {
+        return res.status(401).json({ message: "Please verify your email to login" });
+      }
+  
+      const [studentInfo] = await pool.execute(
+        "SELECT name,phone FROM students WHERE user_id = ? LIMIT 1",
+        [user.user_id]
+      );
+      const studentName = studentInfo.length > 0 ? studentInfo[0].name : null;
+      const studentPhone = studentInfo.length > 0 ? studentInfo[0].phone : null;
+  
+      const [projects] = await pool.execute(
+        "SELECT COUNT(*) AS count FROM projects WHERE user_id = ?",
+        [user.user_id]
+      );
+      const hasProjects = projects[0].count > 0;
+  
+      const token = jwt.sign({ id: user.user_id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+  
+      return res.status(201).json({
+        message: "Login successful",
+        token,
+        user: {
+          id: user.user_id,
+          name: studentName,
+          email: user.email,
+          phone: studentPhone,
+          role: user.role,
+          is_verified: user.is_verified
+        },
+        hasProjects
+      });
+  
     } catch (error) {
-        console.error("Error in loginUser:", error);
-        return res.status(500).json({ message: "Internal server error" });
+      console.error("Error in loginUser:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-};
-
+  };  
 
 exports.submitMultistepData = async (req, res) => {
     try {

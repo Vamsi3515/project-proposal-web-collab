@@ -51,12 +51,14 @@ CREATE TABLE projects (
     project_code VARCHAR(20) UNIQUE NOT NULL,
     domain VARCHAR(100) NOT NULL,
     project_name VARCHAR(255) NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
     description TEXT,
     reference_pdf_url VARCHAR(255),
     delivery_date DATE,
     terms_agreed BOOLEAN DEFAULT FALSE,
     project_status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
     admin_notes TEXT NULL,
+    payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending',
     project_file_url VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
@@ -65,12 +67,13 @@ CREATE TABLE projects (
 -- Payments Table
 CREATE TABLE payments (
     payment_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id VARCHAR(255),
     user_id INT NOT NULL,
     project_id INT NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
-    paid_amount DECIMAL(10,2) DEFAULT 0.00,
-    pending_amount DECIMAL(10,2) GENERATED ALWAYS AS (total_amount - paid_amount) STORED,
-    payment_status ENUM('pending', 'partially_paid', 'paid','refunded') DEFAULT 'pending',
+    paid_amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(50),
+    invoice_url VARCHAR(255),
+	payment_status ENUM('pending', 'success', 'failed', 'refunded') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -120,20 +123,20 @@ CREATE TABLE refunds (
     FOREIGN KEY (payment_id) REFERENCES payments(payment_id) ON DELETE CASCADE
 );
 
-
 -- ALTER TABLE students DROP INDEX roll_no;
 -- ALTER TABLE students ADD UNIQUE (team_id, roll_no);
 -- ALTER TABLE payments ADD COLUMN refund_status ENUM('pending', 'done') DEFAULT 'pending';
 -- ALTER TABLE payments DROP COLUMN refund_status;
 -- drop database project_proposal_web;
 
+USE project_proposal_web;
+
 show tables;
 
-select * from students;
-delete from reports where user_id=1;
+select * from payments;
+delete from projects where project_id=1;
 
-
-update payments set paid_amount="4999" where project_id=3;
+update payments set paid_amount="4999" where project_id=10;
 update projects set project_status="rejected" where project_id=6;
 
 INSERT INTO payments (user_id, project_id, total_amount, paid_amount, pending_amount, payment_status, created_at)
@@ -146,8 +149,31 @@ ALTER TABLE payments
 MODIFY payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
 
 ALTER TABLE payments ADD UNIQUE (project_id);
-delete from payments where project_id=7;
+delete from payments where project_id = 2;
 SELECT * FROM payments WHERE project_id = 5;
 
 ALTER TABLE reports
 ADD COLUMN report_note TEXT NULL AFTER pdf_url;
+
+ALTER TABLE payments
+ADD COLUMN order_id VARCHAR(255) NOT NULL;
+
+ALTER TABLE payments
+MODIFY COLUMN order_id VARCHAR(255) NULL;
+
+ALTER TABLE payments
+MODIFY COLUMN project_id INT NOT NULL UNIQUE;
+
+DROP TABLE PAYMENTS;
+
+ALTER TABLE projects
+ADD COLUMN total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0;
+
+ALTER TABLE payments 
+MODIFY COLUMN payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
+
+ALTER TABLE projects 
+ADD COLUMN payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
+
+ALTER TABLE payments 
+MODIFY COLUMN payment_status ENUM('pending', 'success', 'failed', 'refunded') DEFAULT 'pending';

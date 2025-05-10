@@ -36,14 +36,14 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  // New state for filters
   const [projectStatusFilter, setProjectStatusFilter] = useState("");
   const [reportStatusFilter, setReportStatusFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFilterType, setDateFilterType] = useState("delivery"); // delivery or created
-const [startDate, setStartDate] = useState("");
-const [endDate, setEndDate] = useState("");
+  const [dateFilterType, setDateFilterType] = useState("delivery");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [refundAmount, setRefundAmount] = useState("");
 
   const local_uri = "http://localhost:8000";
   const router = useRouter();
@@ -219,17 +219,16 @@ const [endDate, setEndDate] = useState("");
     return searchMatches && projectStatusMatches && paymentStatusMatches && dateMatches;
   });
 
-  // Extract unique status values for filter dropdowns
-  const projectStatuses = [
-    ...new Set(projects.map((p) => p.project_status).filter(Boolean)),
-  ];
-  const paymentStatuses = [
-    ...new Set(projects.map((p) => p.payment_status).filter(Boolean)),
-  ];
+      const projectStatuses = [
+        ...new Set(projects.map((p) => p.project_status).filter(Boolean)),
+      ];
+      const paymentStatuses = [
+        ...new Set(projects.map((p) => p.payment_status).filter(Boolean)),
+      ];
 
-  const reportStatuses = [
-    ...new Set(reports.map((r) => r.report_status).filter(Boolean)),
-  ];
+      const reportStatuses = [
+        ...new Set(reports.map((r) => r.report_status).filter(Boolean)),
+      ];
 
   const filteredReports = reports.filter((report) => {
     const searchMatches =
@@ -290,10 +289,12 @@ const [endDate, setEndDate] = useState("");
           <PaymentsContent
             isLoading={isLoading}
             payments={filteredPayments}
+            setRefundAmount={setRefundAmount}
             onRefundRequest={(payment) => {
               setSelectedPayment(payment);
               setShowRefundModal(true);
-            }}
+            }
+          }
           />
         );
       default:
@@ -487,38 +488,38 @@ setDateFilterType("delivery");
                 </select>
               </div>
               <div className="flex items-center flex-wrap gap-2">
-  <div className="flex items-center">
-    <label className="mr-2 text-sm font-medium text-gray-700">Filter By:</label>
-    <select
-      className="p-2 border border-gray-300 rounded-md text-sm text-black"
-      value={dateFilterType}
-      onChange={(e) => setDateFilterType(e.target.value)}
-    >
-      <option value="delivery">Delivery Date</option>
-      <option value="created">Creation Date</option>
-    </select>
-  </div>
-  
-  <div className="flex items-center">
-    <label className="mr-2 text-sm font-medium text-gray-700">From:</label>
-    <input
-      type="date"
-      className="p-2 border border-gray-300 rounded-md text-sm text-black"
-      value={startDate}
-      onChange={(e) => setStartDate(e.target.value)}
-    />
-  </div>
-  
-  <div className="flex items-center">
-    <label className="mr-2 text-sm font-medium text-gray-700">To:</label>
-    <input
-      type="date"
-      className="p-2 border border-gray-300 rounded-md text-sm text-black"
-      value={endDate}
-      onChange={(e) => setEndDate(e.target.value)}
-    />
-  </div>
-</div>
+              <div className="flex items-center">
+                <label className="mr-2 text-sm font-medium text-gray-700">Filter By:</label>
+                <select
+                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                  value={dateFilterType}
+                  onChange={(e) => setDateFilterType(e.target.value)}
+                >
+                  <option value="delivery">Delivery Date</option>
+                  <option value="created">Creation Date</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center">
+                <label className="mr-2 text-sm font-medium text-gray-700">From:</label>
+                <input
+                  type="date"
+                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <label className="mr-2 text-sm font-medium text-gray-700">To:</label>
+                <input
+                  type="date"
+                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
             </div>
 
           )}
@@ -585,7 +586,7 @@ setDateFilterType("delivery");
                   </p>
                   <p>
                     <span className="font-medium">Amount:</span> ₹
-                    {selectedPayment.paid_amount}
+                    {refundAmount}
                   </p>
                   <p>
                     <span className="font-medium">Date:</span>{" "}
@@ -656,7 +657,8 @@ const DashboardContent = ({
   const projectsRejected = projects.filter(
     (p) => p.project_status === "rejected"
   ).length;
-  const totalPayments = payments.reduce(
+
+  const totalPayments = projects.reduce(
     (sum, payment) => sum + Number(payment.total_amount || 0),
     0
   );
@@ -1338,10 +1340,14 @@ const ProjectsContent = ({
     switch (status?.toLowerCase()) {
       case "paid":
         return "bg-green-100 text-green-800";
+      case "success":
+        return "bg-green-100 text-green-800";
       case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "refunded":
+      case "failed":
         return "bg-red-100 text-red-800";
+      case "refunded":
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -1745,6 +1751,7 @@ const ReportsContent = ({
 const PaymentsContent = ({
   isLoading,
   payments,
+  setRefundAmount,
   onRefundRequest,
   onConfirmRefund,
 }) => {
@@ -1761,7 +1768,8 @@ const PaymentsContent = ({
     setSelectedPayment(null);
   };
 
-  const handleConfirmRefund = (payment) => {
+  const handleConfirmRefund = (payment, refundAmount) => {
+    setRefundAmount(refundAmount);
     if (onConfirmRefund) {
       onConfirmRefund(payment);
     } else if (onRefundRequest) {
@@ -1822,7 +1830,7 @@ const PaymentsContent = ({
             {payments.length > 0 ? (
               payments.map((payment, index) => (
                 <tr
-                  key={payment.payment_id || index}
+                  key={payment.payment_id || payment.order_id || index}
                   className="hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -1970,6 +1978,11 @@ const PaymentStatusBadge = ({ status }) => {
       textColor = "text-green-800";
       icon = <Check size={12} className="mr-1" />;
       break;
+    case "success":
+      bgColor = "bg-green-100";
+      textColor = "text-green-800";
+      icon = <Check size={12} className="mr-1" />;
+      break;
     case "partially_paid":
       bgColor = "bg-blue-100";
       textColor = "text-blue-800";
@@ -1980,6 +1993,11 @@ const PaymentStatusBadge = ({ status }) => {
       textColor = "text-yellow-800";
       break;
     case "refunded":
+      bgColor = "bg-orange-100";
+      textColor = "text-orange-800";
+      icon = <AlertCircle size={12} className="mr-1" />;
+      break;
+    case "failed":
       bgColor = "bg-red-100";
       textColor = "text-red-800";
       icon = <AlertCircle size={12} className="mr-1" />;

@@ -49,6 +49,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { loadRazorpayScript } from "@/lib/loadRazorpay";
+import PaymentModal from "@/components/PaymentModal";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -74,6 +76,15 @@ export default function Dashboard() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [domains, setDomains] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState(0);
+
+  const openModal = (projectId, paid_amt, tot_amt) => {
+    const pending = tot_amt - paid_amt;
+    setSelectedProject(projectId);
+    setPendingAmount(pending);
+    setShowModal(true);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -239,7 +250,7 @@ export default function Dashboard() {
   const handleProjectAdded = () => {
     setShowNewProject(false);
     fetchProjects(); // Refresh projects after adding
-    toast.success("Project added successfully!");
+    console.log("Project added successfully!");
   };
 
   //colors decllaration for status
@@ -251,15 +262,21 @@ export default function Dashboard() {
         return "bg-green-500";
       case "rejected":
         return "bg-red-500";
+      case "failed":
+        return "bg-red-500";
       case "approved":
         return "bg-blue-600";
       case "partially_paid":
         return "bg-yellow-500";
       case "pending":
         return "bg-orange-500";
+      case "refunded":
+        return "bg-yellow-500";
       case "completed":
         return "bg-green-600";
       case "paid":
+        return "bg-green-600";
+      case "success":
         return "bg-green-600";
       case "done":
         return "bg-green-600";
@@ -290,27 +307,102 @@ export default function Dashboard() {
     return status;
   };
 
-  const handlePayNow = (projectId) => {
-    console.log("Pay now for project", projectId);
-  };
+  const  handlePayNow = async (projectId, amount) => {
+    const res = await loadRazorpayScript();
+  
+    if (!res) {
+      alert("Failed to load Razorpay. Are you online?");
+      return;
+    }
+  
+  
+    try {
+      const orderRes = await axios.post(
+        `${local_uri}/api/payments/create-payment-order`,
+        { projectId, amount },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+  
+      const { orderId, amount: serverAmount } = orderRes.data;
+
+      const pay_user = localStorage.getItem("user") ? localStorage.getItem("user") : "";
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: serverAmount,
+        currency: "INR",
+        name: "Project Payment",
+        description: "Confirm your project",
+        order_id: orderId,
+        handler: async function (response) {
+          console.log("payment id : ", response.razorpay_payment_id);
+          console.log("order id : ", response.razorpay_order_id);
+          try {
+            const captureRes = await axios.post(
+              `${local_uri}/api/payments/capture-payment`,
+              {
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
+  
+            if (captureRes.data.success) {
+              alert("Payment Successful!");
+              window.location.reload();
+            } else {
+              alert("Capture Failed");
+            }
+          } catch (err) {
+            console.error("Capture error:", err);
+            alert("Error capturing payment.");
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            console.log("User cancelled the payment.");
+            alert("Payment was cancelled.");
+          },
+        },
+        prefill: {
+          name: pay_user.name ? pay_user.name : 'N/A',
+          email: pay_user.email ? pay_user.email : 'N/A',
+          contact: pay_user.phone ? pay_user.phone : 'N/A',
+        },
+        theme: {
+          color: "#F37254",
+        },
+      };
+  
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error(error);
+    }
+  };  
 
   const handleViewPayment = (payment) => {
     setSelectedPayment(payment);
     setShowPaymentDialog(true);
   };
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // Default to show all tickets
-  const [selectedProjectForDetails, setSelectedProjectForDetails] =
-    useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProjectForDetails, setSelectedProjectForDetails] =  useState(null);
 
-  // For file downloads
   const handleFileDownload = (fileUrl) => {
     window.open(fileUrl, "_blank");
   };
 
-  // For downloading all files as ZIP
   const handleDownloadAllFiles = (projectId) => {
-    // Implement API call to get the ZIP file
     console.log("Downloading all files for project:", projectId);
   };
 
@@ -389,11 +481,7 @@ export default function Dashboard() {
     useEffect(() => {
       const fetchDomains = async () => {
         try {
-          const token = localStorage.getItem("adminToken");
-          const response = await axios.get(`${local_uri}/api/admin/domains`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          const response = await axios.get(`${local_uri}/api/users/domains`, {
           });
           setDomains(response.data.domains);
         } catch (error) {
@@ -672,21 +760,14 @@ export default function Dashboard() {
                                     <SelectValue placeholder="Select a domain" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="Artificial Intelligence">
-                                      Artificial Intelligence
-                                    </SelectItem>
-                                    <SelectItem value="Web Development">
-                                      Web Development
-                                    </SelectItem>
-                                    <SelectItem value="Blockchain">
-                                      Blockchain
-                                    </SelectItem>
-                                    <SelectItem value="Full Stack">
-                                      Full Stack
-                                    </SelectItem>
-                                    <SelectItem value="Data Science">
-                                      Data Science
-                                    </SelectItem>
+                                    {domains.map((domain) => (
+                                      <SelectItem 
+                                        key={domain.domain_id} 
+                                        value={domain.domain_name}
+                                      >
+                                        {domain.domain_name}
+                                      </SelectItem>
+                                    ))}
                                   </SelectContent>
                                 </Select>
                               </div>
@@ -706,20 +787,37 @@ export default function Dashboard() {
                         )}
                       </AlertDialog>
 
-                      {project.project_status === "approved" &&
-                        project.payment_status !== "paid" && (
-                          <div className="absolute bottom-4 right-4">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePayNow(project.project_id);
-                              }}
-                              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-green-700 transition cursor-pointer"
-                            >
-                              Pay Now
-                            </button>
-                          </div>
-                        )}
+                      {project.project_status === "approved" && (
+                        <div className="absolute bottom-4 right-4">
+                          {project.payment_status === "paid" ? (
+                            <span className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-default">
+                              Paid
+                            </span>
+                          ) : (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal(project.project_id, project.paid_amount, project.total_amount);
+                                }}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-green-500"
+                              >
+                                Pay Now
+                              </button>
+
+                              <PaymentModal
+                                isOpen={showModal}
+                                onClose={() => setShowModal(false)}
+                                pendingAmount={pendingAmount}
+                                projectId={selectedProject}
+                                handlePayNow={handlePayNow}
+                                setSelectedProjectForDetails={setSelectedProjectForDetails}
+                                project={project}
+                              />
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -731,7 +829,7 @@ export default function Dashboard() {
             )}
 
             {/* Project Details Dialog */}
-            <Dialog
+            <Dialog asChild
               open={!!selectedProjectForDetails}
               onOpenChange={(isOpen) => {
                 if (!isOpen) setSelectedProjectForDetails(null);
@@ -888,14 +986,27 @@ export default function Dashboard() {
                     {selectedProjectForDetails &&
                       selectedProjectForDetails.project_status === "approved" &&
                       selectedProjectForDetails.payment_status !== "paid" && (
+                        <>
                         <button
-                          onClick={() =>
-                            handlePayNow(selectedProjectForDetails.project_id)
-                          }
-                          className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition"
-                        >
-                          Pay Now
-                        </button>
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal(selectedProjectForDetails.project_id, selectedProjectForDetails.paid_amount, selectedProjectForDetails.total_amount);
+                                }}
+                                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition"
+                              >
+                                Pay Now
+                              </button>
+
+                              <PaymentModal
+                                isOpen={showModal}
+                                onClose={() => setShowModal(false)}
+                                pendingAmount={pendingAmount}
+                                projectId={selectedProject}
+                                handlePayNow={handlePayNow}
+                                setSelectedProjectForDetails={setSelectedProjectForDetails}
+                                project={selectedProjectForDetails}
+                              />
+                        </>
                       )}
                   </div>
 
@@ -1250,7 +1361,7 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                     filteredPayments.map((payment) => (
                       <tr key={payment.payment_id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                          {payment.payment_id}
+                          {payment.order_id ? payment.order_id : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           {payment.project_name}
@@ -1271,16 +1382,14 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                           <span className="flex items-center">
                             <span
                               className={`w-2 h-2 mr-2 rounded-full ${getStatusStyle(
-                                payment.payment_status
+                                payment.payment_status==="pending" ? "failed" : payment.payment_status
                               )}`}
                             ></span>
                             <span className="text-sm text-gray-700 dark:text-gray-300">
                               {payment.payment_status === "partially_paid"
                                 ? "Partially Paid"
-                                : payment.payment_status
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                  payment.payment_status.slice(1)}
+                                : payment.payment_status === "pending" ? "Failed" : payment.payment_status.charAt(0).toUpperCase() +payment.payment_status.slice(1)
+                                    }
                             </span>
                           </span>
                         </td>
@@ -1329,7 +1438,7 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                             {selectedPayment.project_name}
                           </h4>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Payment ID: {selectedPayment.payment_id}
+                            Payment ID: {selectedPayment.order_id ? selectedPayment.order_id : 'N/A'}
                           </p>
                         </div>
                         <div className="flex items-center">

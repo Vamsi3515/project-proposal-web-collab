@@ -10,9 +10,6 @@ exports.createProject = async (req, res) => {
     const { userId, projectName, domain, description, deliveryDate, termsAgreed } = req.body;
     const uploadedFile = req.file;
 
-    console.log("Request Body:", req.body);
-    console.log("Uploaded File:", uploadedFile);
-
     if (!userId || !projectName || !domain || !deliveryDate) {
       return res.status(400).json({ message: "Missing required fields." });
     }
@@ -60,7 +57,7 @@ exports.createProject = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Project Portal" <${process.env.MAIL_USER}>`,
+      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: "Your project has been submitted!",
       html: `
@@ -187,12 +184,20 @@ exports.getProjectsByUser = async (req, res) => {
     const [projects] = await pool.execute(
       `SELECT 
          p.*, 
-         pay.payment_status, 
-         pay.paid_amount, 
-         pay.total_amount 
+         COALESCE(SUM(pay.paid_amount), 0) AS paid_amount,
+         p.total_amount,
+         (p.total_amount - COALESCE(SUM(pay.paid_amount), 0)) AS pending_amount,
+         CASE
+           WHEN COALESCE(SUM(pay.paid_amount), 0) = 0 THEN 'pending'
+           WHEN COALESCE(SUM(pay.paid_amount), 0) < p.total_amount THEN 'partially_paid'
+           ELSE 'paid'
+         END AS payment_status
        FROM projects p
-       LEFT JOIN payments pay ON p.project_id = pay.project_id
+       LEFT JOIN payments pay 
+         ON p.project_id = pay.project_id 
+         AND pay.payment_status = 'success'
        WHERE p.user_id = ?
+       GROUP BY p.project_id
        ORDER BY p.created_at DESC`,
       [userId]
     );    
