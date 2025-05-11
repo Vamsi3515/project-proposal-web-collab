@@ -37,45 +37,44 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const local_uri = "http://localhost:8000";
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true); // Start loading
 
-    try {
-      const response = await fetch(`${local_uri}/api/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const response = await fetch(`${local_uri}/api/users/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        toast.error(data.message || "Login failed");
-        return;
-      }
-
-      const { token, user, hasProjects } = data;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      toast.success("Login successful!");
-
-      if (hasProjects) {
-        router.push("/dashboard");
-      } else {
-        router.push("/studentdetails");
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      toast.error("Something went wrong. Please try again later.");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      toast.error(data.message || "Login failed");
+      return;
     }
-  };
+
+    const { token, user, hasProjects } = data;
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    toast.success("Login successful!"); // Toast after operation
+
+    if (hasProjects) {
+      router.push("/dashboard");
+    } else {
+      router.push("/studentdetails");
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    toast.error("Something went wrong. Please try again later.");
+  } finally {
+    setLoading(false); // Stop loading after the process finishes
+  }
+};
 
   return (
     <form className="space-y-4 mt-16" onSubmit={handleLogin}>
@@ -190,52 +189,53 @@ function RegisterForm() {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+const handleRegister = async (e) => {
+  e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
+  if (password !== confirmPassword) {
+    toast.error("Passwords do not match.");
+    return;
+  }
 
-    const fullOtp = otp.join("");
-    if (fullOtp.length < 6) {
-      toast.error("Enter complete 6-digit OTP.");
-      return;
-    }
+  const fullOtp = otp.join("");
+  if (fullOtp.length < 6) {
+    toast.error("Enter complete 6-digit OTP.");
+    return;
+  }
 
-    setLoading(true);
-    try {
-      const res = await fetch(`${local_uri}/api/users/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, otp: fullOtp }),
-      });
+  setLoading(true); // Start loading
 
-      const data = await res.json();
+  try {
+    const res = await fetch(`${local_uri}/api/users/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password, otp: fullOtp }),
+    });
 
-      if (res.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        toast.success("Registration successful!");
-        
-        const newUser = data.user;
-        if (newUser.is_verified) {
-          router.push("/studentdetails");
-        }
-      } else if (res.status === 400) {
-        toast.error(data.error || "Invalid OTP");
-      } else {
-        toast.error("Registration failed. Please try again.");
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      toast.success("Registration successful!"); // Toast after operation
+
+      const newUser = data.user;
+      if (newUser.is_verified) {
+        router.push("/studentdetails");
       }
-    } catch (err) {
-      toast.error("Internal Server Error. Please try again later.");
-    } finally {
-      setLoading(false);
+    } else if (res.status === 400) {
+      toast.error(data.error || "Invalid OTP");
+    } else {
+      toast.error("Registration failed. Please try again.");
     }
-  };
+  } catch (err) {
+    toast.error("Internal Server Error. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const isFormValid =
     email &&
@@ -245,6 +245,8 @@ function RegisterForm() {
     (showOtpFields ? otp.every((digit) => digit !== "") : true);
 
   return (
+    <>
+     <FullScreenLoader show={loading} />
     <form className="space-y-4" onSubmit={handleRegister}>
       <input
         type="email"
@@ -347,11 +349,12 @@ function RegisterForm() {
         </button>
       )}
     </form>
+    </>
   );
 }
 
 // Reusable loading spinner component
-function LoadingSpinner({ size = "md" }) {
+function LoadingSpinner({ size = "md", color = "white" }) {
   const sizeClasses = {
     sm: "w-4 h-4",
     md: "w-6 h-6",
@@ -359,6 +362,19 @@ function LoadingSpinner({ size = "md" }) {
   };
 
   return (
-    <div className={`animate-spin rounded-full border-t-2 border-b-2 border-white ${sizeClasses[size]}`}></div>
+    <div
+      className={`animate-spin rounded-full border-t-2 border-b-2 ${sizeClasses[size]}`}
+      style={{ borderColor: `${color} transparent ${color} transparent` }}
+    ></div>
+  );
+}
+
+
+function FullScreenLoader({ show }) {
+  if (!show) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <LoadingSpinner size="lg" />
+    </div>
   );
 }
