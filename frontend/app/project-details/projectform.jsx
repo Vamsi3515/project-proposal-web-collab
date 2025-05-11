@@ -148,12 +148,19 @@ export default function ProjectDetails({ onProjectAdded }) {
         onProjectAdded();
       }      
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Something went wrong while submitting. Please try again.";
-      console.error("Error submitting project:", errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+      if (error.response?.status === 404) {
+          toast.error("User not found. Your account may be removed by admin");
+          localStorage.removeItem('token');
+          router.push('/');
+          return;
+        }
+        const errorMessage = error.response?.data?.message || "Something went wrong while submitting. Please try again.";
+        console.error("Error submitting project:", errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+
   };
 
   async function fetchProjectId() {
@@ -269,6 +276,7 @@ export default function ProjectDetails({ onProjectAdded }) {
           </label>
           <input
             type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.zip,.rar"
             onChange={(e) => setFile(e.target.files[0])}
             className="w-full p-2 border border-gray-300 bg-gray-100 dark:bg-gray-800 dark:text-white rounded"
           />

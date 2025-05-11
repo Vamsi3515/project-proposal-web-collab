@@ -1,6 +1,6 @@
 // AdminDashboardModals.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check, AlertCircle, Upload, Paperclip, Send, Download, Eye, Edit, User, FileText, AlertTriangle } from 'lucide-react';
+import { X, Check, AlertCircle, Upload, Paperclip, Send, Download, Eye, Edit, User, FileText, AlertTriangle, EyeClosed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -14,6 +14,8 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
   const [note, setNote] = useState('');
   const [pdfs, setPdfs] = useState([]);
   const fileInputRef = useRef(null);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [invoices, setInvoices] = useState([]);
   const local_uri = "http://localhost:8000";
 
   const handleChange = (e) => {
@@ -156,6 +158,22 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
     }
   };
 
+    const handleViewInvoice = async (projectId) => {
+      const token = localStorage.getItem('adminToken');
+      try {
+        const response = await axios.get(`${local_uri}/api/admin/project/${projectId}/invoices`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+  
+        if (response.data.success) {
+          setInvoices(response.data.invoices);
+          setInvoiceModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error fetching invoices:", error);
+      }
+    };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl overflow-hidden">
@@ -280,7 +298,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
           </div>
 
           {/* Student Details Section */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             {!showStudentDetails ? (
               <button
                 onClick={() => setShowStudentDetails(true)}
@@ -332,6 +350,46 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                 </div>
               </div>
             )}
+          </div> */}
+
+          {/* Student Details Section */}
+          <div className="mb-6">
+            {!showStudentDetails ? (
+              <button
+                onClick={() => setShowStudentDetails(true)}
+                className="flex items-center text-blue-600 hover:text-blue-800"
+              >
+                <User size={16} className="mr-2" />
+                View Student Details
+              </button>
+            ) : project.students && project.students.length > 0 ? (
+              <div className="border border-gray-200 rounded p-4">
+                <h4 className="text-md font-medium mb-3">Student Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {project.students.map((student, index) => (
+                    <div key={index} className="border p-3 rounded bg-gray-50 dark:bg-gray-800 mb-2">
+                      <p><strong>Name:</strong> {student.name || 'N/A'}</p>
+                      <p><strong>Roll No:</strong> {student.roll_no || 'N/A'}</p>
+                      <p><strong>Email:</strong> {student.email || 'N/A'}</p>
+                      <p><strong>Branch:</strong> {student.branch || 'N/A'}</p>
+                      <p><strong>Phone:</strong> {student.phone || 'N/A'}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Collapse Button */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowStudentDetails(false)}
+                    className="flex items-center text-orange-600 hover:text-orange-800"
+                  >
+                    <EyeClosed size={16} className="mr-2" />Hide Student Details
+                    
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No student details available</p>
+            )}
           </div>
 
           {/* File Upload Section */}
@@ -341,6 +399,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
               <div className="mb-3">
                 <input
                   type="file"
+                  accept=".pdf, .zip"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   className="hidden"
@@ -351,7 +410,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                   className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-blue-500 transition-colors"
                 >
                   <Paperclip size={24} className="text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-500">Click to upload files (ZIP, PDF, etc)</p>
+                  <p className="text-sm text-gray-500">Click to upload files (ZIP or PDF)</p>
                 </button>
               </div>
               
@@ -432,15 +491,53 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                 Close
               </button>
               <button
-                onClick={openInvoice}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
-              >
-                <Download size={16} className="mr-2" />
-                Open Invoice
-              </button>
+                  onClick={() =>
+                    handleViewInvoice(project.project_id)
+                  }
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center"
+                >
+                  <Download size={16} className="mr-2" />
+                  View Invoice
+                </button>
             </>
           )}
         </div>
+
+          {invoiceModalOpen && (
+              <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                  <h2 className="text-xl font-bold mb-4">Invoices</h2>
+                  <ul className="space-y-3 max-h-80 overflow-y-auto">
+                    {invoices.length > 0 ? (invoices.map((inv) => (
+                      <li key={inv.payment_id} className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-gray-700">
+                            ₹{inv.paid_amount} - {inv.payment_method} - {new Date(inv.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <a
+                          href={`${local_uri}${inv.invoice_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                        >
+                          View PDF
+                        </a>
+                      </li>
+                    ))) : (
+                      <p className="text-black dark:text-white">No payments done Yet.</p>
+                    )}
+                  </ul>
+                  <button
+                    onClick={() => setInvoiceModalOpen(false)}
+                    className="mt-4 w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
       </div>
     </div>
   );

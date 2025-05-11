@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../config/db");0 
 const generateProjectCode = require("../utils/generateProjectCode");
 const nodemailer = require("nodemailer");
 const path = require("path");

@@ -73,29 +73,42 @@ exports.getAllProjects = async (req, res) => {
       SELECT 
         p.*, 
         u.email AS user_email,
-        COALESCE(MAX(s.name), 'Unknown') AS full_name,
         st.college, 
         st.domain AS user_domain,
         COALESCE(SUM(pay.paid_amount), 0) AS paid_amount
       FROM projects p
       JOIN users u ON p.user_id = u.user_id
       LEFT JOIN student_teams st ON st.user_id = u.user_id
-      LEFT JOIN students s ON s.user_id = u.user_id
-        AND s.student_id = (
-          SELECT MIN(student_id) 
-          FROM students 
-          WHERE user_id = u.user_id
-        )
       LEFT JOIN payments pay ON p.project_id = pay.project_id AND pay.payment_status = 'success'
       GROUP BY p.project_id, u.email, st.college, st.domain
       ORDER BY p.created_at DESC;
     `);
 
-    res.status(200).json(projects);
+    const [students] = await pool.execute(`
+      SELECT 
+        s.user_id,
+        s.name,
+        s.roll_no,
+        s.branch,
+        s.email,
+        s.phone
+      FROM students s
+    `);
+
+    const projectsWithStudents = projects.map(project => {
+      const relatedStudents = students.filter(s => s.user_id === project.user_id);
+      return {
+        ...project,
+        students: relatedStudents,
+      };
+    });
+
+    res.status(200).json(projectsWithStudents);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch projects: " + error.message });
   }
 };
+
 
 exports.updateProjectStatus = async (req, res) => {
     const { id } = req.params;
@@ -171,20 +184,29 @@ exports.getAllPayments = async (req, res) => {
   try {
     const [payments] = await pool.execute(`
       SELECT 
-        p.payment_id,
-        p.user_id,
-        p.order_id,
-        u.email AS user_email,
-        s.name AS student_name,
-        pr.project_id,
-        pr.project_code,
-        pr.project_name,
-        pr.delivery_date,
-        pr.total_amount,
-        p.paid_amount,
-        p.payment_status,
-        p.created_at,
-        p.updated_at
+      p.payment_id,
+      p.user_id,
+      p.order_id,
+      u.email AS user_email,
+      s.name AS student_name,
+      pr.project_id,
+      pr.project_code,
+      pr.project_name,
+      pr.delivery_date,
+      pr.total_amount,
+      p.paid_amount,
+      p.payment_status,
+      p.invoice_url,
+      
+      (pr.total_amount - IFNULL((
+        SELECT SUM(p2.paid_amount)
+        FROM payments p2
+        WHERE p2.project_id = pr.project_id AND p2.payment_status = 'success'
+      ), 0)) AS pending_amount,
+
+      p.created_at,
+      p.updated_at
+
       FROM payments p
       JOIN users u ON p.user_id = u.user_id
       LEFT JOIN students s ON s.user_id = u.user_id
@@ -398,7 +420,6 @@ exports.rejectProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Update project status and add admin notes
     await pool.execute(
       `UPDATE projects 
        SET project_status = 'rejected', admin_notes = ? 
@@ -406,7 +427,6 @@ exports.rejectProject = async (req, res) => {
       [reason, projectId]
     );
 
-    // Send rejection email to user
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -436,25 +456,106 @@ exports.rejectProject = async (req, res) => {
 };
 
 
-  exports.closeReport = async (req, res) => {
-    const { reportId } = req.params;
+  // exports.closeReport = async (req, res) => {
+  //   const { reportId } = req.params;
   
-    try {
-      const [result] = await pool.execute(
-        `UPDATE reports SET report_status = 'closed' WHERE report_id = ?`,
-        [reportId]
-      );
+  //   try {
+      
+  //     const [result] = await pool.execute(
+  //       `UPDATE reports SET report_status = 'closed' WHERE report_id = ?`,
+  //       [reportId]
+  //     );
   
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Report not found" });
-      }
+  //     if (result.affectedRows === 0) {
+  //       return res.status(404).json({ message: "Report not found" });
+  //     }
+
+  //     const transporter = nodemailer.createTransport({
+  //     service: "gmail",
+  //     auth: {
+  //       user: process.env.EMAIL_USER,
+  //       pass: process.env.EMAIL_PASS,
+  //     },
+  //   });
+
+  //   await transporter.sendMail({
+  //     from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+  //     to: user.email,
+  //     subject: ` "${report.title}" has been closed!`,
+  //     html: `
+  //       <h2>Hi,</h2>
+  //       <p>Your report <strong>${report.title}</strong> has been closed!</p>
+  //       <p>Thank you!</p>
+  //     `,
+  //   });
   
-      res.status(200).json({ message: "Report closed successfully." });
-    } catch (error) {
-      console.error("Close Report Error:", error);
-      res.status(500).json({ message: "Internal server error" });
+  //     res.status(200).json({ message: "Report closed successfully." });
+  //   } catch (error) {
+  //     console.error("Close Report Error:", error);
+  //     res.status(500).json({ message: "Internal server error" });
+  //   }
+  // };
+
+exports.closeReport = async (req, res) => {
+  const { reportId } = req.params;
+
+  try {
+    const [reportRows] = await pool.execute(
+      `SELECT title, user_id FROM reports WHERE report_id = ?`,
+      [reportId]
+    );
+
+    if (reportRows.length === 0) {
+      return res.status(404).json({ message: "Report not found" });
     }
-  };
+
+    const report = reportRows[0];
+
+    const [userRows] = await pool.execute(
+      `SELECT email FROM users WHERE user_id = ?`,
+      [report.user_id]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userRows[0];
+
+    const [updateResult] = await pool.execute(
+      `UPDATE reports SET report_status = 'closed' WHERE report_id = ?`,
+      [reportId]
+    );
+
+    if (updateResult.affectedRows === 0) {
+      return res.status(500).json({ message: "Failed to close the report" });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Your report "${report.title}" has been closed`,
+      html: `
+        <h2>Hello,</h2>
+        <p>Your report titled <strong>${report.title}</strong> has been reviewed and marked as <strong>closed</strong>.</p>
+        <p>Thank you for reporting!</p>
+      `,
+    });
+
+    res.status(200).json({ message: "Report closed and user notified successfully." });
+  } catch (error) {
+    console.error("Close Report Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
   
   exports.deleteReport = async (req, res) => {
     const { reportId } = req.params;
@@ -824,5 +925,24 @@ exports.updateReportNote = async (req, res) => {
   } catch (err) {
     console.error("Update Report Note Error:", err);
     res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+exports.getProjectInvoices = async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
+
+    const [invoices] = await pool.execute(
+      `SELECT payment_id, paid_amount, payment_method, invoice_url, payment_status, created_at
+       FROM payments
+       WHERE project_id = ? AND invoice_url IS NOT NULL
+       ORDER BY created_at DESC`,
+      [projectId]
+    );
+
+    res.status(200).json({ success: true, invoices });
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve invoices" });
   }
 };

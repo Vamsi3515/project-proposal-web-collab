@@ -17,6 +17,7 @@ import {
   RefreshCw,
   LogOutIcon,
   Filter,
+  FileText,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import axios from "axios";
@@ -1757,6 +1758,7 @@ const PaymentsContent = ({
 }) => {
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const local_uri = "http://localhost:8000";
 
   const handleRefundClick = (payment) => {
     setSelectedPayment(payment);
@@ -1833,8 +1835,8 @@ const PaymentsContent = ({
                   key={payment.payment_id || payment.order_id || index}
                   className="hover:bg-gray-50"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {payment.payment_id}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {payment.order_id ? payment.order_id : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {payment.project_code}
@@ -1873,14 +1875,19 @@ const PaymentsContent = ({
                     {new Date(payment.created_at).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {
+                    {payment.payment_status === 'success' ? (
                       <button
-                        className="text-red-600 hover:text-red-900"
-                        onClick={() => handleRefundClick(payment)}
+                      onClick={() =>
+                          payment.invoice_url ? open(`${local_uri}${payment.invoice_url}`) : toast.error("No invoice avaialble for this payment")
+                        }
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center"
                       >
-                        Refund
-                      </button>
-                    }
+                        <FileText size={16} className="mr-2" />
+                        Open Invoice
+                    </button>
+                    ) : (
+                      <p className="text-red-500 dark:text-white text-nowrap">No invoice avaialble</p>
+                    )}
                   </td>
                 </tr>
               ))
