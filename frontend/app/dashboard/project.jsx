@@ -736,7 +736,7 @@ export default function Dashboard() {
                                 handleEditClick(project); // Set selectedProject and open dialog
                                 setIsEditDialogOpen(true);
                               }}
-                              className="border rounded-sm bg-gray-200 p-2 dark:text-white text-gray-500 hover:text-blue-600"
+                              className="border rounded-sm dark:bg-gray-200 p-2 dark:text-black text-gray-500 hover:text-blue-600"
                             >
                               <Pencil size={18} />
                             </button>
