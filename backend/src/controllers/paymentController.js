@@ -282,6 +282,27 @@ exports.capturePayment = async (req, res) => {
       [newStatus, order[0].project_id]
     );
 
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      to: user[0].email,
+      subject: `Payment Successful for Project: ${project[0].project_name}`,
+      html: `
+        <h2>Hi ${student[0].name},</h2>
+        <p>Your payment of <strong>₹${paidAmount}</strong> has been successfully received for the project <strong>${project[0].project_name}</strong> (${project[0].project_code}).</p>
+        <p><strong>Payment Method:</strong> ${method}</p>
+        <p><strong>Invoice:</strong> <a href="${invoiceUrl}">Click here to view/download</a></p>
+        <p>Thank you for choosing HUGU Technologies.</p>
+      `
+    });
+
     res.status(200).json({
       success: true,
       message: "Payment captured successfully",

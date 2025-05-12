@@ -57,7 +57,7 @@ exports.createProject = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: "Your project has been submitted!",
       html: `
@@ -204,6 +204,7 @@ exports.getProjectsByUser = async (req, res) => {
 
     res.json(projects);
   } catch (error) {
+    
     res.status(500).json({ message: error.message });
   }
 };

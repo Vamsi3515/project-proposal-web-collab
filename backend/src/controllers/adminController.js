@@ -381,7 +381,7 @@ exports.approveProject = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
       to: project.email,
       subject: `Your project "${project.project_name}" (Code: ${project.project_code}) has been approved!`,
       html: `
@@ -436,7 +436,7 @@ exports.rejectProject = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
       to: project.email,
       subject: `Your project "${project.project_name}" (Code: ${project.project_code}) has been rejected`,
       html: `
@@ -540,7 +540,7 @@ exports.closeReport = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: `Your report "${report.title}" has been closed`,
       html: `
@@ -702,7 +702,7 @@ exports.closeReport = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Project Portal" <${process.env.EMAIL_USER}>`,
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: `Your account and all associated data have been removed`,
       html: `
@@ -796,6 +796,37 @@ exports.updateDomain = async (req, res) => {
   }
 };
 
+// exports.uploadProjectSolution = async (req, res) => {
+//   try {
+//     const { projectCode } = req.body;
+//     const renamedPaths = [];
+
+//     for (const file of req.files) {
+//       const ext = path.extname(file.originalname);
+//       const newFileName = `${projectCode}-${Date.now()}${ext}`;
+//       const newPath = path.join("uploads/projects/solutions", newFileName);
+
+//       fs.renameSync(file.path, newPath);
+//       renamedPaths.push(newPath);
+//     }
+
+//     if (renamedPaths.length > 0) {
+//       await pool.execute(
+//         "UPDATE projects SET project_file_url = ? WHERE project_code = ?",
+//         [renamedPaths[0], projectCode]
+//       );
+//     }
+
+//     res.status(200).json({
+//       message: "Files uploaded successfully",
+//       files: renamedPaths,
+//     });
+//   } catch (err) {
+//     console.error("Upload Error:", err);
+//     res.status(500).json({ message: "Upload failed", error: err.message });
+//   }
+// };
+
 exports.uploadProjectSolution = async (req, res) => {
   try {
     const { projectCode } = req.body;
@@ -817,8 +848,42 @@ exports.uploadProjectSolution = async (req, res) => {
       );
     }
 
+    const [userResult] = await pool.execute(
+      `SELECT u.email, p.project_name 
+       FROM projects p 
+       JOIN users u ON p.user_id = u.user_id 
+       WHERE p.project_code = ?`,
+      [projectCode]
+    );
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: "User not found for this project" });
+    }
+
+    const user = userResult[0];
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Solution uploaded for your project "${user.project_name}"`,
+      html: `
+        <h2>Hello,</h2>
+        <p>The solution for your project <strong>${user.project_name}</strong> has been uploaded by the admin.</p>
+        <p>Please visit the website to download it.</p>
+        <p>Thank you!</p>
+      `,
+    });
+
     res.status(200).json({
-      message: "Files uploaded successfully",
+      message: "Files uploaded successfully and notification email sent.",
       files: renamedPaths,
     });
   } catch (err) {
@@ -840,7 +905,41 @@ exports.addProjectNote = async (req, res) => {
       [note, projectCode]
     );
 
-    res.status(200).json({ message: "Note added successfully." });
+    const [userResult] = await pool.execute(
+      `SELECT u.email, p.project_name 
+       FROM projects p 
+       JOIN users u ON p.user_id = u.user_id 
+       WHERE p.project_code = ?`,
+      [projectCode]
+    );
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: "User not found for this project." });
+    }
+
+    const user = userResult[0];
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `New admin note for your project "${user.project_name}"`,
+      html: `
+        <h2>Hello,</h2>
+        <p>You have received a new note from the admin for your project: <strong>${user.project_name}</strong>.</p>
+        <p>Please log in to the website to view the note.</p>
+        <p>Thank you!</p>
+      `,
+    });
+
+    res.status(200).json({ message: "Note added and email notification sent." });
   } catch (error) {
     console.error("Error adding note:", error);
     res.status(500).json({ message: "Failed to add note.", error: error.message });
@@ -901,19 +1000,18 @@ exports.updateProjectDetails = async (req, res) => {
   }
 };
 
+
 exports.updateReportNote = async (req, res) => {
   const { reportId } = req.params;
-  const { note }     = req.body;
+  const { note } = req.body;
 
-  if (typeof note !== 'string') {
-    return res.status(400).json({ message: "A note string is required." });
+  if (typeof note !== 'string' || note.trim() === '') {
+    return res.status(400).json({ message: "A valid note string is required." });
   }
 
   try {
     const [result] = await pool.execute(
-      `UPDATE reports
-         SET report_note = ?
-       WHERE report_id = ?`,
+      `UPDATE reports SET report_note = ? WHERE report_id = ?`,
       [note, reportId]
     );
 
@@ -921,12 +1019,47 @@ exports.updateReportNote = async (req, res) => {
       return res.status(404).json({ message: "Report not found." });
     }
 
-    res.json({ message: "Note updated." });
+    const [userResult] = await pool.execute(
+      `SELECT r.title, u.email 
+       FROM reports r 
+       JOIN users u ON r.user_id = u.user_id 
+       WHERE r.report_id = ?`,
+      [reportId]
+    );
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: "User not found for this report." });
+    }
+
+    const user = userResult[0];
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Admin replied to your report: "${user.title}"`,
+      html: `
+        <h2>Hello,</h2>
+        <p>The admin has replied to your report titled <strong>${user.title}</strong>.</p>
+        <p>Please log in to the platform to read the note.</p>
+        <p>Thank you!</p>
+      `,
+    });
+
+    res.json({ message: "Note updated and user notified." });
   } catch (err) {
     console.error("Update Report Note Error:", err);
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 exports.getProjectInvoices = async (req, res) => {
   try {
