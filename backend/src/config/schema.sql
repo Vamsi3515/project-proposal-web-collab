@@ -70,9 +70,13 @@ CREATE TABLE payments (
     order_id VARCHAR(255),
     user_id INT NOT NULL,
     project_id INT NOT NULL,
+    razorpay_payment_id VARCHAR(255),
     paid_amount DECIMAL(10,2) NOT NULL,
     payment_method VARCHAR(50),
     invoice_url VARCHAR(255),
+    refund_id VARCHAR(255),
+	refund_amount DECIMAL(10, 2),
+    refund_status VARCHAR(20),
 	payment_status ENUM('pending', 'success', 'failed', 'refunded') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -177,3 +181,10 @@ ADD COLUMN payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') 
 
 ALTER TABLE payments 
 MODIFY COLUMN payment_status ENUM('pending', 'success', 'failed', 'refunded') DEFAULT 'pending';
+
+ALTER TABLE payments 
+ADD COLUMN refund_id VARCHAR(255),
+ADD COLUMN refund_amount DECIMAL(10, 2),
+ADD COLUMN refund_status VARCHAR(20);
+
+ALTER TABLE payments ADD COLUMN razorpay_payment_id VARCHAR(255);

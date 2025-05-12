@@ -736,7 +736,7 @@ export default function Dashboard() {
                                 handleEditClick(project); // Set selectedProject and open dialog
                                 setIsEditDialogOpen(true);
                               }}
-                              className="border rounded-sm bg-gray-700 p-2 dark:text-white text-gray-500 hover:text-blue-600"
+                              className="border rounded-sm bg-gray-200 p-2 dark:text-white text-gray-500 hover:text-blue-600"
                             >
                               <Pencil size={18} />
                             </button>
@@ -1435,7 +1435,7 @@ export default function Dashboard() {
                     filteredPayments.map((payment) => (
                       <tr key={payment.payment_id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                          {payment.order_id ? payment.order_id : "N/A"}
+                          {payment.razorpay_payment_id ? payment.razorpay_payment_id : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           {payment.project_name}
@@ -1519,8 +1519,8 @@ export default function Dashboard() {
                           </h4>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             Payment ID:{" "}
-                            {selectedPayment.order_id
-                              ? selectedPayment.order_id
+                            {selectedPayment.razorpay_payment_id
+                              ? selectedPayment.razorpay_payment_id
                               : "N/A"}
                           </p>
                         </div>

@@ -3,6 +3,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const pool = require("../config/db");
+const nodemailer = require("nodemailer");
 
 const { createInvoice } = require('../utils/invoiceGenerator.js');
 
@@ -110,52 +111,37 @@ exports.capturePayment = async (req, res) => {
   try {
     const { paymentId, orderId } = req.body;
 
-    const [order] = await pool.execute(
-      `SELECT * FROM payments 
-       WHERE user_id = ? AND order_id = ? AND paid_amount = 0`,
+    // Fetch order
+    const [orderRows] = await pool.execute(
+      `SELECT * FROM payments WHERE user_id = ? AND order_id = ? AND paid_amount = 0`,
       [req.user.id, orderId]
     );
 
-    const [user] = await pool.execute(
-      `SELECT email FROM users 
-      WHERE user_id = ?`,
-      [req.user.id]
-    );
-
-    const [student] = await pool.execute(
-      `SELECT name,phone FROM students 
-      WHERE user_id = ?`,
-      [req.user.id]
-    );
-
-    const [project] = await pool.execute(
-      `SELECT project_name, project_code,domain,delivery_date,total_amount FROM projects 
-      WHERE project_id = ?`,
-      [order[0].project_id]
-    );
-
-    const [team] = await pool.execute(
-      `SELECT 
-        JSON_UNQUOTE(college->'$.name') AS college_name, 
-        domain 
-      FROM student_teams 
-      WHERE user_id = ?`,
-      [req.user.id]
-    );
-
-    if (!order.length) {
-      return res.status(404).json({ 
-        success: false,
-        message: "Payment record not found or already processed." 
-      });
+    if (!orderRows.length) {
+      return res.status(404).json({ success: false, message: "Payment record not found or already processed." });
     }
 
+    const order = orderRows[0];
+
+    // Parallel DB queries for user, student, project, team
+    const [
+      [userRows], [studentRows], [projectRows], [teamRows]
+    ] = await Promise.all([
+      pool.execute(`SELECT email FROM users WHERE user_id = ?`, [req.user.id]),
+      pool.execute(`SELECT name, phone FROM students WHERE user_id = ?`, [req.user.id]),
+      pool.execute(`SELECT project_name, project_code, domain, delivery_date, total_amount FROM projects WHERE project_id = ?`, [order.project_id]),
+      pool.execute(`SELECT JSON_UNQUOTE(college->'$.name') AS college_name FROM student_teams WHERE user_id = ?`, [req.user.id])
+    ]);
+
+    const user = userRows[0];
+    const student = studentRows[0];
+    const project = projectRows[0];
+    const team = teamRows[0];
+
+    // Validate Razorpay payment
     const payment = await razorpay.payments.fetch(paymentId);
     if (!['authorized', 'captured'].includes(payment.status)) {
-      return res.status(400).json({ 
-        success: false,
-        message: `Invalid payment status: ${payment.status}` 
-      });
+      return res.status(400).json({ success: false, message: `Invalid payment status: ${payment.status}` });
     }
 
     let capturedPayment = payment;
@@ -166,50 +152,18 @@ exports.capturePayment = async (req, res) => {
     const paidAmount = capturedPayment.amount / 100;
     const method = capturedPayment.method || 'unknown';
 
+    // Invoice paths
     const logoPath = path.join(__dirname, '..', '..', 'assets', 'logo.png');
     const signatureImagePath = path.join(__dirname, '..', '..', 'assets', 'signature.png');
 
-    const [totalPaidBefore] = await pool.execute(
-      `SELECT SUM(paid_amount) AS total_paid 
-       FROM payments 
-       WHERE project_id = ? AND payment_status = 'success'`,
-      [order[0].project_id]
+    // Total paid so far for the project
+    const [[{ total_paid: totalPaidBefore = 0 }]] = await pool.execute(
+      `SELECT SUM(paid_amount) AS total_paid FROM payments WHERE project_id = ? AND payment_status = 'success'`,
+      [order.project_id]
     );
-    const paidBefore = totalPaidBefore[0].total_paid || 0;
 
-    //invoice call
-    // const invoiceUrl = await generateProfessionalInvoice({
-    //   invoiceNumber: orderId,
-      // businessInfo: {
-      //   name: 'HUGU TECHNOLOGIES',
-      //   address1: '# 2nd Floor, Chenna Complex,Opp Mega Theatre',
-      //   address2: 'Pillar No P-1542,Near Dilsukhnagar, Hyderabad',
-      //   phone: '+91 8106803105, +91 6303063542',
-      //   email: 'info@hugotechnologies.in',
-      //   website: 'http://www.hugotechnologies.in'
-      // },
-    // clientInfo: {
-    //   name: student[0].name,
-    //   email: user[0].email,
-    //   phone: student[0].phone,
-    //   college: team[0].college.name,
-    //   domain: project[0].domain,
-    // },
-    // items: [{
-    //   description: project[0].project_name,
-    //   quantity: 1,
-    //   paid_amt: paidAmount,
-    // }],
-    // paymentInfo: {
-    //   subtotal: paidAmount,
-    //   taxRate: 0,
-    //   taxAmount: 0,
-    //   total: paidAmount},
-    //   signatureImagePath,
-    //   logoPath,
-    // });
-
-    const invoice = {
+    // Generate invoice
+    const invoiceData = {
       bussinessInfo: {
         name: 'HUGU TECHNOLOGIES',
         address1: '# 2nd Floor, Chenna Complex,Opp Mega Theatre',
@@ -219,93 +173,92 @@ exports.capturePayment = async (req, res) => {
         website: 'http://www.hugotechnologies.in'
       },
       clientInfo: {
-        name: student[0].name,
-        email: user[0].email,
-        phone: student[0].phone,
-        college: team[0].college_name,
-        domain: project[0].domain,
+        name: student.name,
+        email: user.email,
+        phone: student.phone,
+        college: team.college_name,
+        domain: project.domain,
       },
-      items: [
-        {
-          name: project[0].project_name,
-          deliveryBy: project[0].delivery_date,
-          cost: project[0].total_amount,
-          paid_amt: paidAmount,
-          // totalPaid: paidBefore+paidAmount
-        }
-      ],
+      items: [{
+        name: project.project_name,
+        deliveryBy: project.delivery_date,
+        cost: project.total_amount,
+        paid_amt: paidAmount
+      }],
       paymentInfo: {
-      subtotal: paidAmount,
-      taxRate: 0,
-      taxAmount: 0,
-      dueAmount: Number(project[0].total_amount) - (Number(paidBefore)+Number(paidAmount)),
-      total_paid: Number(paidBefore)+Number(paidAmount),
-      total: project[0].total_amount},
+        subtotal: paidAmount,
+        taxRate: 0,
+        taxAmount: 0,
+        dueAmount: Number(project.total_amount) - (Number(totalPaidBefore) + paidAmount),
+        total_paid: Number(totalPaidBefore) + paidAmount,
+        total: project.total_amount
+      }
     };
 
-    const invoiceUrl = createInvoice(invoice, orderId, logoPath, signatureImagePath);
+    const invoiceUrl = createInvoice(invoiceData, orderId, logoPath, signatureImagePath);
 
     await pool.execute(
-      `UPDATE payments 
-       SET paid_amount = ?, 
-           payment_method = ?, 
-           invoice_url = ?, 
-           payment_status = 'success',
-           updated_at = CURRENT_TIMESTAMP
-       WHERE payment_id = ?`,
-      [paidAmount, method, invoiceUrl, order[0].payment_id]
+      `UPDATE payments SET 
+        paid_amount = ?, 
+        payment_method = ?, 
+        invoice_url = ?, 
+        payment_status = 'success',
+        razorpay_payment_id = ?, 
+        updated_at = CURRENT_TIMESTAMP 
+      WHERE payment_id = ?`,
+      [paidAmount, method, invoiceUrl, paymentId, order.payment_id]
     );
 
-    const [totalPaidRows] = await pool.execute(
-      `SELECT SUM(paid_amount) AS total_paid 
-       FROM payments 
-       WHERE project_id = ? AND payment_status = 'success'`,
-      [order[0].project_id]
+    // Recalculate total paid after this payment
+    const [[{ total_paid: totalPaidNow = 0 }]] = await pool.execute(
+      `SELECT SUM(paid_amount) AS total_paid FROM payments WHERE project_id = ? AND payment_status = 'success'`,
+      [order.project_id]
     );
-    const totalPaid = totalPaidRows[0].total_paid || 0;
 
-    const [projectRows] = await pool.execute(
+    // Get total project amount
+    const [[{ total_amount: totalAmount }]] = await pool.execute(
       `SELECT total_amount FROM projects WHERE project_id = ?`,
-      [order[0].project_id]
+      [order.project_id]
     );
-    const totalAmount = projectRows[0].total_amount;
 
-    let newStatus = 'pending';
-    if (totalPaid >= totalAmount) {
-      newStatus = 'paid';
-    } else if (totalPaid > 0) {
-      newStatus = 'partially_paid';
-    }
+    // Update project payment status
+    const newStatus = totalPaidNow >= totalAmount
+      ? 'paid'
+      : totalPaidNow > 0
+      ? 'partially_paid'
+      : 'pending';
 
     await pool.execute(
       `UPDATE projects SET payment_status = ? WHERE project_id = ?`,
-      [newStatus, order[0].project_id]
+      [newStatus, order.project_id]
     );
 
+    // Send confirmation email
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+        pass: process.env.EMAIL_PASS
+      }
     });
 
     await transporter.sendMail({
       from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
-      to: user[0].email,
-      subject: `Payment Successful for Project: ${project[0].project_name}`,
+      to: user.email,
+      subject: `Payment Successful for Project: ${project.project_name}`,
       html: `
-        <h2>Hi ${student[0].name},</h2>
-        <p>Your payment of <strong>₹${paidAmount}</strong> has been successfully received for the project <strong>${project[0].project_name}</strong> (${project[0].project_code}).</p>
+        <h2>Hi ${student.name},</h2>
+        <p>Your payment of <strong>₹${paidAmount}</strong> has been successfully received for the project <strong>${project.project_name}</strong> (${project.project_code}).</p>
         <p><strong>Payment Method:</strong> ${method}</p>
         <p><strong>Invoice:</strong> <a href="${invoiceUrl}">Click here to view/download</a></p>
         <p>Thank you for choosing HUGU Technologies.</p>
       `
     });
 
+    // Final response
     res.status(200).json({
       success: true,
-      message: "Payment captured successfully",
+      message: 'Payment captured successfully',
       payment: {
         id: capturedPayment.id,
         amount: paidAmount,
@@ -313,17 +266,13 @@ exports.capturePayment = async (req, res) => {
         status: capturedPayment.status
       },
       invoiceUrl,
-      projectPaymentStatus: newStatus,
+      projectPaymentStatus: newStatus
     });
 
   } catch (error) {
     console.error("Payment Capture Error:", error);
-    
     if (!res.headersSent) {
-      res.status(500).json({ 
-        success: false,
-        message: error.message 
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 };
@@ -393,6 +342,9 @@ exports.getUserDashboardPayments = async (req, res) => {
         pr.domain,
         pr.total_amount,
         p.paid_amount,
+        p.refund_amount,
+        p.refund_id,
+        p.razorpay_payment_id,
         p.payment_status,
         (
           pr.total_amount 

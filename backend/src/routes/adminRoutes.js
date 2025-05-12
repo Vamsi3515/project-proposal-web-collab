@@ -23,9 +23,10 @@ router.post("/domains/update/:id", upload.single("pdf"), adminController.updateD
 router.post("/domains/delete/:id", authorizeAdmin, adminController.deleteDomain);
 router.post("/upload-solution", upload.array("files"), adminController.uploadProjectSolution);
 router.post('/add-note', authorizeAdmin, adminController.addProjectNote);
-// router.get('/invoice/:projectCode', authorizeAdmin, adminController.getInvoice);
 router.put('/update-project/:projectCode', authorizeAdmin, adminController.updateProjectDetails);
 router.post( "/reports/:reportId/note", authorizeAdmin, adminController.updateReportNote);
 router.get('/project/:projectId/invoices', authorizeAdmin, adminController.getProjectInvoices);
+router.get('/payments/:projectId', authorizeAdmin, adminController.getPaymentsByProjectId);
+router.post("/payments/refund/:paymentId", authorizeAdmin, adminController.refundPayment);
 
 module.exports = router;

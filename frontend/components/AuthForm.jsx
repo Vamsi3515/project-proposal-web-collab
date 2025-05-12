@@ -66,7 +66,7 @@ const handleLogin = async (e) => {
     if (hasProjects) {
       router.push("/dashboard");
     } else {
-      router.push("/studentdetails");
+      router.push("/project-details");
     }
   } catch (err) {
     console.error("Login error:", err);

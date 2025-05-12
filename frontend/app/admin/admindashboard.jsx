@@ -552,78 +552,6 @@ setDateFilterType("delivery");
         <main className="flex-1 overflow-y-auto p-6">{renderContent()}</main>
       </div>
 
-      {/* Refund Modal */}
-      {showRefundModal && (
-        <div className="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 dark:text-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Process Refund</h3>
-              <button
-                onClick={() => setShowRefundModal(false)}
-                className="text-gray-500 dark:text-gray-200 hover:text-gray-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className="mb-4">
-                Are you sure you want to process a refund for the following
-                payment?
-              </p>
-              {selectedPayment && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p>
-                    <span className="font-medium">ID:</span>{" "}
-                    {selectedPayment.payment_id}
-                  </p>
-                  <p>
-                    <span className="font-medium">Client:</span>{" "}
-                    {selectedPayment.student_name}
-                  </p>
-                  <p>
-                    <span className="font-medium">Project ID:</span>{" "}
-                    {selectedPayment.project_code}
-                  </p>
-                  <p>
-                    <span className="font-medium">Amount:</span> ₹
-                    {refundAmount}
-                  </p>
-                  <p>
-                    <span className="font-medium">Date:</span>{" "}
-                    {new Date(selectedPayment.created_at).toLocaleDateString(
-                      "en-GB"
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowRefundModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRefund}
-                className="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <RefreshCw size={16} className="animate-spin mr-2" />
-                    Processing...
-                  </div>
-                ) : (
-                  "Process Refund"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -667,9 +595,11 @@ const DashboardContent = ({
     (sum, payment) => sum + Number(payment.paid_amount || 0),
     0
   );
+  
   const refundedPayments = payments.filter(
-    (p) => p.status === "refunded"
+    (p) => p.payment_status === "refunded"
   ).length;
+
   const reportsClosed = reports.filter(
     (r) => r.report_status === "closed"
   ).length;
@@ -1313,12 +1243,17 @@ const ProjectsContent = ({
     }
   };
 
-  // New function to handle refund
-  const handleRefund = async (payment, refundAmount) => {
+  const handleRefund = async (payment_id, refundAmount) => {
+    console.log("Payment  Id: ",payment_id);
+    console.log("Refund Payment : ",refundAmount);
+    if (!payment_id) {
+      alert("Invalid payment ID");
+      return;
+    }
     try {
       const token = localStorage.getItem("adminToken");
       const res = await axios.post(
-        `${local_uri}/api/admin/payments/refund/${payment.project_id}`,
+        `${local_uri}/api/admin/payments/refund/${payment_id}`,
         { 
           amount: refundAmount 
         },
@@ -1487,6 +1422,7 @@ const ProjectsContent = ({
                           onClick={() => {
                             setSelectedProject(project);
                             setShowRefundModal(true);
+
                           }}
                           className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
                         >
@@ -1563,10 +1499,10 @@ const ProjectsContent = ({
       {/* Add RefundDialog modal */}
       {selectedProject && showRefundModal && (
         <RefundDialog
-          isOpen={showRefundModal}
           payment={selectedProject}
-          onClose={() => setShowRefundModal(false)}
           onConfirmRefund={handleRefund}
+          onClose={() => setShowRefundModal(false)}
+          isLoading={isLoading}
         />
       )}
     </div>
@@ -1824,6 +1760,10 @@ const PaymentsContent = ({
     setSelectedPayment(null);
   };
 
+  const handleSetRefundDialogOpen = (show) => {
+    setRefundDialogOpen(show);
+  }
+
   const handleConfirmRefund = (payment, refundAmount) => {
     setRefundAmount(refundAmount);
     if (onConfirmRefund) {
@@ -1890,7 +1830,7 @@ const PaymentsContent = ({
                   className="hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {payment.order_id ? payment.order_id : 'N/A'}
+                    {payment.razorpay_payment_id ? payment.razorpay_payment_id : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {payment.project_code}
@@ -1921,9 +1861,9 @@ const PaymentsContent = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ₹
-                    {isNaN(payment.refund_amt)
+                    {isNaN(payment.refund_amount)
                       ? "0.00"
-                      : Number(payment.refund_amt).toFixed(2)}
+                      : Number(payment.refund_amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(payment.created_at).toLocaleDateString("en-GB")}
@@ -1940,7 +1880,7 @@ const PaymentsContent = ({
                         Open Invoice
                     </button>
                     ) : (
-                      <p className="text-red-500 dark:text-white text-nowrap">No invoice avaialble</p>
+                      <p className="text-red-500 dark:text-red text-nowrap">No invoice avaialble</p>
                     )}
                   </td>
                 </tr>

@@ -4,6 +4,7 @@ const pool = require("../config/db");
 const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
+const Razorpay = require('razorpay');
 
 exports.loginAdmin = async (req, res) => {
     try {
@@ -38,34 +39,6 @@ exports.loginAdmin = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
-
-// exports.getAllProjects = async (req, res) => {
-//   try {
-//     const [projects] = await pool.execute(`
-//       SELECT 
-//         p.*, 
-//         u.email AS user_email,
-//         COALESCE(s.name, 'Unknown') AS full_name,
-//         st.college, 
-//         st.domain AS user_domain,
-//         COALESCE(pay.payment_status, 'pending') AS payment_status
-//       FROM projects p
-//       JOIN users u ON p.user_id = u.user_id
-//       LEFT JOIN student_teams st ON st.user_id = u.user_id
-//       LEFT JOIN students s ON s.user_id = u.user_id
-//         AND s.student_id = (
-//           SELECT MIN(student_id) 
-//           FROM students 
-//           WHERE user_id = u.user_id
-//         )
-//       LEFT JOIN payments pay ON p.project_id = pay.project_id
-//     `);    
-
-//     res.status(200).json(projects);
-//   } catch (error) {
-//     res.status(500).json({ message: "Failed to fetch projects: " + error.message });
-//   }
-// };
 
 exports.getAllProjects = async (req, res) => {
   try {
@@ -150,36 +123,6 @@ exports.getAllReports = async (req, res) => {
     }
 };
 
-// exports.getAllPayments = async (req, res) => {
-//   try {
-//     const [payments] = await pool.execute(`
-//       SELECT 
-//         p.payment_id,
-//         p.user_id,
-//         u.email AS user_email,
-//         (SELECT s.name FROM students s WHERE s.email = u.email LIMIT 1) AS student_name,
-//         pr.project_id,
-//         pr.project_code,
-//         pr.project_name,
-//         pr.delivery_date,
-//         p.total_amount,
-//         p.paid_amount,
-//         p.pending_amount,
-//         p.payment_status,
-//         p.created_at,
-//         p.updated_at
-//       FROM payments p
-//       JOIN users u ON p.user_id = u.user_id
-//       JOIN projects pr ON p.project_id = pr.project_id
-//       ORDER BY p.created_at DESC;
-//     `);
-
-//     res.status(200).json(payments);
-//   } catch (error) {
-//     res.status(500).json({ message: "Failed to fetch payments: " + error.message });
-//   }
-// };
-
 exports.getAllPayments = async (req, res) => {
   try {
     const [payments] = await pool.execute(`
@@ -196,6 +139,9 @@ exports.getAllPayments = async (req, res) => {
       pr.total_amount,
       p.paid_amount,
       p.payment_status,
+      refund_id,
+      refund_amount,
+      razorpay_payment_id,
       p.invoice_url,
       
       (pr.total_amount - IFNULL((
@@ -1077,5 +1023,279 @@ exports.getProjectInvoices = async (req, res) => {
   } catch (error) {
     console.error("Error fetching invoices:", error);
     res.status(500).json({ success: false, message: "Failed to retrieve invoices" });
+  }
+};
+
+exports.getPaymentsByProjectId = async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const [payments] = await pool.execute(
+      `SELECT payment_id, order_id, paid_amount, payment_method, payment_status, invoice_url, created_at
+       FROM payments 
+       WHERE project_id = ? AND payment_status = 'success'
+       ORDER BY created_at DESC`,
+      [projectId]
+    );
+
+    if (payments.length === 0) {
+      return res.status(404).json({ message: "No successful payments found for this project." });
+    }
+
+    res.status(200).json({
+      success: true,
+      projectId,
+      totalPayments: payments.length,
+      payments
+    });
+
+  } catch (error) {
+    console.error("Fetch Payments by Project ID Error:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+// exports.refundPayment = async (req, res) => {
+//   try {
+//     const { amount } = req.body;
+//     const paymentId = req.params.paymentId;
+
+//     if (!paymentId) {
+//       return res.status(400).json({ error: "Payment ID is required" });
+//     }
+
+//     const [paymentRows] = await pool.execute(
+//       `SELECT * FROM payments WHERE payment_id = ? AND payment_status = 'success'`,
+//       [paymentId]
+//     );
+
+//     if (!paymentRows.length) {
+//       return res.status(404).json({ success: false, message: "Payment not found" });
+//     }
+
+//     const paymentRecord = paymentRows[0];
+
+//     const [user] = await pool.execute(`SELECT email FROM users WHERE user_id = ?`, [paymentRecord.user_id]);
+//     const [student] = await pool.execute(`SELECT name FROM students WHERE user_id = ?`, [paymentRecord.user_id]);
+//     const [project] = await pool.execute(`SELECT project_name, project_code FROM projects WHERE project_id = ?`, [paymentRecord.project_id]);
+
+//     const refund = await razorpay.payments.refund(paymentRecord.razorpay_payment_id || paymentId, {
+//       amount: amount ? amount * 100 : undefined
+//     });
+
+//     const refundAmount = refund.amount / 100;
+//     const refundStatus = refund.status;
+
+//     await pool.execute(
+//       `UPDATE payments 
+//        SET refund_id = ?, 
+//            refund_amount = ?, 
+//            refund_status = ?, 
+//            payment_status = 'refunded', 
+//            updated_at = CURRENT_TIMESTAMP
+//        WHERE payment_id = ?`,
+//       [refund.id, refundAmount, refundStatus, paymentId]
+//     );
+
+//     const [totalPaidRows] = await pool.execute(
+//       `SELECT SUM(paid_amount - IFNULL(refund_amount, 0)) AS total_paid 
+//        FROM payments 
+//        WHERE project_id = ? AND payment_status IN ('success', 'refunded')`,
+//       [paymentRecord.project_id]
+//     );
+//     const totalPaid = totalPaidRows[0].total_paid || 0;
+
+//     const [projectTotal] = await pool.execute(
+//       `SELECT total_amount FROM projects WHERE project_id = ?`,
+//       [paymentRecord.project_id]
+//     );
+//     const totalAmount = projectTotal[0].total_amount;
+
+//     let newStatus = 'pending';
+//     if (totalPaid >= totalAmount) {
+//       newStatus = 'paid';
+//     } else if (totalPaid > 0) {
+//       newStatus = 'partially_paid';
+//     }
+
+//     await pool.execute(
+//       `UPDATE projects SET payment_status = ? WHERE project_id = ?`,
+//       [newStatus, paymentRecord.project_id]
+//     );
+
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS,
+//       },
+//     });
+
+//     await transporter.sendMail({
+//       from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+//       to: user[0].email,
+//       subject: `Refund Issued for Project: ${project[0].project_name}`,
+//       html: `
+//         <h2>Hi ${student[0].name},</h2>
+//         <p>We have processed your refund of <strong>₹${refundAmount}</strong> for project <strong>${project[0].project_name}</strong> (${project[0].project_code}).</p>
+//         <p><strong>Refund ID:</strong> ${refund.id}</p>
+//         <p><strong>Status:</strong> ${refundStatus}</p>
+//         <p>If you have any concerns, feel free to reach out to us.</p>
+//         <p>Thank you,<br>Team HUGU Technologies</p>
+//       `
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Refund processed successfully",
+//       refundId: refund.id,
+//       refundAmount,
+//       refundStatus,
+//       projectPaymentStatus: newStatus
+//     });
+
+//   } catch (error) {
+//     console.error("Refund Error:", error);
+//     if (!res.headersSent) {
+//       res.status(500).json({ success: false, message: error.message });
+//     }
+//   }
+// };
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+exports.refundPayment = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const paymentId = req.params.paymentId;
+
+    if (!paymentId) {
+      return res.status(400).json({ success: false, message: "Payment ID is required" });
+    }
+
+    // Fetch payment record without status restriction
+    const [paymentRows] = await pool.execute(
+      `SELECT * FROM payments WHERE payment_id = ?`,
+      [paymentId]
+    );
+
+
+    if (!paymentRows.length) {
+      return res.status(404).json({ success: false, message: "Payment not found" });
+    }
+
+    const paymentRecord = paymentRows[0];
+
+    if (paymentRecord.payment_status === 'refunded') {
+      return res.status(400).json({ success: false, message: "This payment has already been refunded" });
+    }
+        
+
+    // Optional: check for zero or negative amount
+    if (amount !== undefined && (isNaN(amount) || Number(amount) <= 0)) {
+      return res.status(400).json({ success: false, message: "Refund amount must be greater than zero" });
+    }
+
+    // Get user, student, and project info
+    const [[user]] = await pool.execute(`SELECT email FROM users WHERE user_id = ?`, [paymentRecord.user_id]);
+    const [[student]] = await pool.execute(`SELECT name FROM students WHERE user_id = ?`, [paymentRecord.user_id]);
+    const [[project]] = await pool.execute(`SELECT project_name, project_code FROM projects WHERE project_id = ?`, [paymentRecord.project_id]);
+
+    console.log("Order Id :", paymentRecord.razorpay_payment_id);
+    
+    // Refund via Razorpay
+    const refund = await razorpay.payments.refund(paymentRecord.razorpay_payment_id, {
+      amount: amount ? Math.round(amount * 100) : undefined // Amount in paise
+    });
+
+    const refundAmount = refund.amount / 100;
+    const refundStatus = refund.status;
+
+    // Update payment row
+    await pool.execute(
+      `UPDATE payments 
+       SET refund_id = ?, 
+           refund_amount = ?, 
+           refund_status = ?, 
+           payment_status = 'refunded', 
+           updated_at = CURRENT_TIMESTAMP
+       WHERE payment_id = ?`,
+      [refund.id, refundAmount, refundStatus, paymentId]
+    );
+
+    // Recalculate project payment status
+    const [totalPaidRows] = await pool.execute(
+      `SELECT SUM(paid_amount - IFNULL(refund_amount, 0)) AS total_paid 
+       FROM payments 
+       WHERE project_id = ? AND payment_status IN ('success', 'refunded')`,
+      [paymentRecord.project_id]
+    );
+    const totalPaid = totalPaidRows[0].total_paid || 0;
+
+    console.log("Debug Line 10");
+    
+    const [[projectTotal]] = await pool.execute(
+      `SELECT total_amount FROM projects WHERE project_id = ?`,
+      [paymentRecord.project_id]
+    );
+    const totalAmount = projectTotal.total_amount;
+
+    let newStatus = 'pending';
+    if (totalPaid >= totalAmount) {
+      newStatus = 'paid';
+    } else if (totalPaid > 0) {
+      newStatus = 'partially_paid';
+    }
+
+    console.log("Debug Line 11");
+
+    await pool.execute(
+      `UPDATE projects SET payment_status = ? WHERE project_id = ?`,
+      [newStatus, paymentRecord.project_id]
+    );
+
+    console.log("Debug Line 12");
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Refund Issued for Project: ${project.project_name}`,
+      html: `
+        <h2>Hi ${student.name},</h2>
+        <p>We have processed your refund of <strong>₹${refundAmount}</strong> for the project <strong>${project.project_name}</strong> (${project.project_code}). Sometimes It may take 5-7 working days to credit into your account.</p>
+        <p><strong>Refund ID:</strong> ${refund.id}</p>
+        <p><strong>Status:</strong> ${refundStatus}</p>
+        <p>If you have any concerns, feel free to reach out to us.</p>
+        <p>Thank you,<br>Team HUGU Technologies</p>
+      `
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Refund processed successfully",
+      refundId: refund.id,
+      refundAmount,
+      refundStatus,
+      projectPaymentStatus: newStatus
+    });
+
+  } catch (error) {
+    console.error("Refund Error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    }
   }
 };
