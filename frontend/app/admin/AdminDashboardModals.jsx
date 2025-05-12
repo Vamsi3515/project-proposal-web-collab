@@ -97,6 +97,10 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
   };  
 
   const handleUpload = async () => {
+     if (project.payment_status === 'pending' || project.payment_status === 'partially_paid') {
+    toast.warning("User hasn't completed full payment. File upload is not allowed.");
+    return;
+  }
     if (files.length === 0) {
       toast.error("Please select files to upload");
       return;
@@ -175,7 +179,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
     };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b">
           <h3 className="text-lg font-medium flex items-center">
@@ -447,11 +451,12 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             <h4 className="text-md font-medium mb-2">Add Note</h4>
             <div className="border border-gray-200 rounded p-4">
               <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Type a message to the student..."
-                className="w-full p-3 border border-gray-300 rounded-lg mb-3 min-h-24"
-              ></textarea>
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded mb-3"
+            rows={4}
+            placeholder="Write a note to the student..."
+          />
               <button
                 onClick={handleSendNote}
                 disabled={!note.trim()}
@@ -490,6 +495,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
               >
                 Close
               </button>
+              
               <button
                   onClick={() =>
                     handleViewInvoice(project.project_id)
@@ -504,7 +510,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
         </div>
 
           {invoiceModalOpen && (
-              <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
+              <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h2 className="text-xl font-bold mb-4">Invoices</h2>
                   <ul className="space-y-3 max-h-80 overflow-y-auto">
@@ -558,7 +564,7 @@ export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium flex items-center">
@@ -640,7 +646,7 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium flex items-center">
@@ -708,7 +714,7 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
 // Delete Confirmation Modal
 export const DeleteConfirmationModal = ({ item, itemType, onClose, onDelete, warning }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium flex items-center">
@@ -848,7 +854,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
     };
   
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-hidden">
           <div className="flex justify-between items-center p-4 border-b">
             <h3 className="text-lg font-medium flex items-center">
@@ -962,7 +968,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
   // Close Report Confirmation Modal
   export const CloseReportModal = ({ report, onClose, onConfirm }) => {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium flex items-center">
@@ -1015,7 +1021,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
   // Delete Report Confirmation Modal
   export const DeleteReportModal = ({ report, onClose, onConfirm }) => {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium flex items-center">
@@ -1184,7 +1190,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
       
       <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4">
         

@@ -714,7 +714,7 @@ const DashboardContent = ({
           },
         }
       );
-      alert("Domain updated successfully");
+      toast.success("Domain updated successfully");
       setEditDomainId(null);
       setEditedDomainName("");
       setEditedFile(null);
@@ -726,14 +726,14 @@ const DashboardContent = ({
       setDomains(res.data.domains);
     } catch (err) {
       console.error("Update failed", err);
-      alert("Failed to update domain");
+      toast.error("Failed to update domain");
     }
   };
 
   // Upload + add new domain
   const handleNewDomainUpload = async () => {
     if (!newDomain || !newFile) {
-      alert("Please enter domain name and select a file");
+      toast.error("Please enter domain name and select a file");
       return;
     }
 
@@ -748,7 +748,7 @@ const DashboardContent = ({
           "Content-Type": "multipart/form-data",
         },
       });
-      alert("New domain and PDF uploaded!");
+      toast.success("New domain and PDF uploaded!");
       setNewFile(null);
       setNewDomain("");
       const res = await axios.get(`${local_uri}/api/admin/domains`, {
@@ -759,7 +759,7 @@ const DashboardContent = ({
       setDomains(res.data.domains);
     } catch (error) {
       console.error(error);
-      alert("Upload failed");
+      toast.error("Upload failed");
     }
   };
 
@@ -776,7 +776,7 @@ const DashboardContent = ({
           },
         }
       );
-      alert("Domain deleted.");
+      toast.success("Domain deleted.");
       const res = await axios.get(`${local_uri}/api/admin/domains`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
@@ -785,7 +785,7 @@ const DashboardContent = ({
       setDomains(res.data.domains);
     } catch (error) {
       console.error("Delete failed", error);
-      alert("Failed to delete domain.");
+      toast.error("Failed to delete domain.");
     }
   };
 
@@ -811,7 +811,7 @@ const DashboardContent = ({
           },
         }
       );
-      alert("Domain updated successfully.");
+      toast.success("Domain updated successfully.");
       setEditDomain(null);
       const res = await axios.get(`${local_uri}/api/admin/domains`, {
         headers: {
@@ -821,7 +821,7 @@ const DashboardContent = ({
       setDomains(res.data.domains);
     } catch (error) {
       console.error("Update failed", error);
-      alert("Failed to update domain.");
+      toast.error("Failed to update domain.");
     }
   };
 
@@ -1118,12 +1118,14 @@ const DashboardContent = ({
                     >
                       Edit
                     </button>
+                    
                     <button
                       onClick={() => handleDeleteDomain(domain.domain_id)}
                       className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
                     >
                       Delete
                     </button>
+                    
                   </div>
                 </div>
               ))}
@@ -1171,6 +1173,7 @@ import {
 //     }
 //   };
 
+
 const ProjectsContent = ({
   isLoading,
   projects,
@@ -1182,6 +1185,7 @@ const ProjectsContent = ({
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false); // New state for refund modal
 
   if (isLoading) {
     return <LoadingState />;
@@ -1305,6 +1309,32 @@ const ProjectsContent = ({
       fetchProjects();
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Error deleting project";
+      toast.error(errorMsg);
+    }
+  };
+
+  // New function to handle refund
+  const handleRefund = async (payment, refundAmount) => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await axios.post(
+        `${local_uri}/api/admin/payments/refund/${payment.project_id}`,
+        { 
+          amount: refundAmount 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      toast.success("Refund processed successfully!");
+      setShowRefundModal(false);
+      fetchProjects();
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Error processing refund";
       toast.error(errorMsg);
     }
   };
@@ -1449,6 +1479,20 @@ const ProjectsContent = ({
                           </button>
                         </>
                       )}
+                      {/* Updated Refund button*/}
+                      {project.payment_status && 
+                       project.payment_status !== "refunded" && 
+                       project.payment_status !== "pending" && (
+                        <button
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setShowRefundModal(true);
+                          }}
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                        >
+                          Refund
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setSelectedProject(project);
@@ -1513,6 +1557,16 @@ const ProjectsContent = ({
               ? "This project has an active payment. Please refund the payment before deleting."
               : null
           }
+        />
+      )}
+
+      {/* Add RefundDialog modal */}
+      {selectedProject && showRefundModal && (
+        <RefundDialog
+          isOpen={showRefundModal}
+          payment={selectedProject}
+          onClose={() => setShowRefundModal(false)}
+          onConfirmRefund={handleRefund}
         />
       )}
     </div>
@@ -1919,9 +1973,8 @@ const PaymentsContent = ({
 // Loading State Component
 const LoadingState = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-64">
-      <RefreshCw size={40} className="text-blue-500 animate-spin mb-4" />
-      <p className="text-gray-500 text-lg">Loading data...</p>
+    <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500 border-solid"></div>
     </div>
   );
 };

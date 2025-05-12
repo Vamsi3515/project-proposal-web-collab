@@ -10,15 +10,20 @@ export default function MultiStepForm() {
   const [selectedDomain, setSelectedDomain] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const local_uri = "http://localhost:8000";
-  const [loading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [transitionDirection, setTransitionDirection] = useState(null);
   const [domainList, setDomainList] = useState([]);
+  const [formInitialized, setFormInitialized] = useState(false);
+
+  const STORAGE_KEY = "multistepFormData";
 
   const {
     register,
     handleSubmit,
     control,
     trigger,
+    setValue,
+    watch,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
@@ -32,6 +37,84 @@ export default function MultiStepForm() {
     control,
     name: "students",
   });
+
+  const watchAllFields = watch();
+
+  // Load form data from localStorage on component mount
+  useEffect(() => {
+    const initializeForm = async () => {
+      setIsLoading(true);
+      try {
+        // Try to load saved form data from local storage
+        const savedFormData = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedFormData) {
+          const parsedData = JSON.parse(savedFormData);
+          
+          // Restore form data
+          if (parsedData.students && parsedData.students.length > 0) {
+            // Remove the default empty field
+            remove(0);
+            
+            // Add each saved student
+            parsedData.students.forEach(student => {
+              append(student);
+            });
+          }
+          
+          // Restore college data
+          if (parsedData.college) {
+            setValue("college", parsedData.college);
+          }
+          
+          // Restore selected domain
+          if (parsedData.selectedDomain) {
+            setSelectedDomain(parsedData.selectedDomain);
+          }
+          
+          // Restore current step
+          if (parsedData.currentStep) {
+            setStep(parsedData.currentStep);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading form data from local storage:", error);
+        toast.error("There was an error loading your saved form data.");
+      } finally {
+        setFormInitialized(true);
+        setIsLoading(false);
+      }
+    };
+
+    initializeForm();
+    
+    // Fetch domains list
+    const fetchDomains = async () => {
+      try {
+        const response = await axios.get(`${local_uri}/api/users/domains`);
+        setDomainList(response.data.domains);
+      } catch (error) {
+        console.error("Failed to fetch domains:", error);
+      }
+    };
+  
+    fetchDomains();
+  }, [append, remove, setValue]);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    // Only save after form has been initialized to prevent overwriting with default values
+    if (formInitialized) {
+      const dataToSave = {
+        students: watchAllFields.students,
+        college: watchAllFields.college,
+        selectedDomain: selectedDomain,
+        currentStep: step
+      };
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [watchAllFields, selectedDomain, step, formInitialized]);
 
   const validateStep = async () => {
     let valid = false;
@@ -82,20 +165,6 @@ export default function MultiStepForm() {
     }, 400);
   };
 
-  useEffect(() => {
-    const fetchDomains = async () => {
-      try {
-        const response = await axios.get(`${local_uri}/api/users/domains`, {
-        });
-        setDomainList(response.data.domains);
-      } catch (error) {
-        console.error("Failed to fetch domains:", error);
-      }
-    };
-  
-    fetchDomains();
-  }, []);
-
   const router = useRouter(); 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -129,8 +198,12 @@ export default function MultiStepForm() {
   
       if (response.ok) {
         console.log("Server Response:", result);
+        
+        // Clear form data from localStorage after successful submission
+        localStorage.removeItem(STORAGE_KEY);
+        
         router.push("/project-details");
-      }else if (response.status === 401) {
+      } else if (response.status === 401) {
         toast.error("Session expired. Please log in again.");
         router.push("/");
       } else {
@@ -143,6 +216,17 @@ export default function MultiStepForm() {
       setIsSubmitting(false);
     }
   };  
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 z-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300">Loading form data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="md:w-xl sm:w-xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
@@ -203,7 +287,7 @@ export default function MultiStepForm() {
                 <span className="text-sm text-gray-500 dark:text-gray-400">{fields.length} of 10 students</span>
               </div>
 
-              <div className="max-h-80 overflow-y-auto pr-2">
+              <div className="max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                 {fields.map((item, index) => (
                   <div key={item.id} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 mb-4">
                     <div className="flex justify-between items-center mb-3">
@@ -303,16 +387,18 @@ export default function MultiStepForm() {
 
               {fields.length < 10 && (
                 <button
-                type="button"
-                onClick={() => {
-                  const container = document.querySelector('.custom-scrollbar');
-                  append({ name: "", rollNo: "", branch: "", email: "", phone: "" });
-                  setTimeout(() => {
-                    container.scrollTop = container.scrollHeight;
-                  }, 10);
-                }}
-                className="w-full py-2 px-4 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors flex items-center justify-center gap-2 hover:shadow-sm"
-              >
+                  type="button"
+                  onClick={() => {
+                    append({ name: "", rollNo: "", branch: "", email: "", phone: "" });
+                    const container = document.querySelector('.custom-scrollbar');
+                    setTimeout(() => {
+                      if (container) {
+                        container.scrollTop = container.scrollHeight;
+                      }
+                    }, 10);
+                  }}
+                  className="w-full py-2 px-4 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors flex items-center justify-center gap-2 hover:shadow-sm"
+                >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"></path>
                   </svg>
@@ -424,8 +510,9 @@ export default function MultiStepForm() {
           {step > 1 ? (
             <button 
               type="button" 
-              onClick={prevStep} 
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white rounded-md transition-colors"
+              onClick={prevStep}
+              disabled={isLoading}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white rounded-md transition-colors disabled:opacity-50"
             >
               ← Previous
             </button>
@@ -436,19 +523,32 @@ export default function MultiStepForm() {
           {step < 3 ? (
             <button 
               type="button" 
-              onClick={nextStep} 
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-2"
+              onClick={nextStep}
+              disabled={isLoading}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-2 disabled:opacity-50"
             >
-              Next
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
-              </svg>
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Next
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                  </svg>
+                </>
+              )}
             </button>
           ) : (
             <button 
               type="submit" 
-              disabled={!selectedDomain || isSubmitting}
-              className={`px-6 py-2 ${isSubmitting ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-md transition-colors flex items-center gap-2`}
+              disabled={!selectedDomain || isSubmitting || isLoading}
+              className={`px-6 py-2 ${isSubmitting || isLoading ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-md transition-colors flex items-center gap-2 disabled:opacity-50`}
             >
               {isSubmitting ? (
                 <>

@@ -235,7 +235,7 @@ export default function Dashboard() {
     setActiveSection(section);
     setShowNewProject(false);
     setShowReportIssue(false);
-    
+
     // Reset appropriate filters based on the section
     if (section === "projects") {
       setProjectStatusFilter("All");
@@ -297,7 +297,8 @@ export default function Dashboard() {
       project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.domain?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus = projectStatusFilter === "All" || project.status === projectStatusFilter;
+    const matchesStatus =
+      projectStatusFilter === "All" || project.status === projectStatusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -309,15 +310,14 @@ export default function Dashboard() {
     return status;
   };
 
-  const  handlePayNow = async (projectId, amount) => {
+  const handlePayNow = async (projectId, amount) => {
     const res = await loadRazorpayScript();
-  
+
     if (!res) {
-      alert("Failed to load Razorpay. Are you online?");
+      toast.error("Failed to load Razorpay. Are you online?");
       return;
     }
-  
-  
+
     try {
       const orderRes = await axios.post(
         `${local_uri}/api/payments/create-payment-order`,
@@ -328,10 +328,12 @@ export default function Dashboard() {
           },
         }
       );
-  
+
       const { orderId, amount: serverAmount } = orderRes.data;
 
-      const pay_user = localStorage.getItem("user") ? localStorage.getItem("user") : "";
+      const pay_user = localStorage.getItem("user")
+        ? localStorage.getItem("user")
+        : "";
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -356,41 +358,41 @@ export default function Dashboard() {
                 },
               }
             );
-  
+
             if (captureRes.data.success) {
-              alert("Payment Successful!");
+              toast.success("Payment Successful!");
               window.location.reload();
             } else {
-              alert("Capture Failed");
+              toast.error("Capture Failed");
             }
           } catch (err) {
             console.error("Capture error:", err);
-            alert("Error capturing payment.");
+            toast.error("Error capturing payment.");
           }
         },
         modal: {
           ondismiss: function () {
             console.log("User cancelled the payment.");
-            alert("Payment was cancelled.");
+            toast.error("Payment was cancelled.");
           },
         },
         prefill: {
-          name: pay_user.name ? pay_user.name : 'N/A',
-          email: pay_user.email ? pay_user.email : 'N/A',
-          contact: pay_user.phone ? pay_user.phone : 'N/A',
+          name: pay_user.name ? pay_user.name : "N/A",
+          email: pay_user.email ? pay_user.email : "N/A",
+          contact: pay_user.phone ? pay_user.phone : "N/A",
         },
         theme: {
           color: "#F37254",
         },
       };
-  
+
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error);
     }
-  };  
+  };
 
   const handleViewPayment = (payment) => {
     setSelectedPayment(payment);
@@ -398,7 +400,10 @@ export default function Dashboard() {
   };
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProjectForDetails, setSelectedProjectForDetails] =  useState(null);
+  const [selectedProjectForDetails, setSelectedProjectForDetails] =
+    useState(null);
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleFileDownload = (fileUrl) => {
     window.open(fileUrl, "_blank");
@@ -410,11 +415,14 @@ export default function Dashboard() {
 
   // For invoice generation
   const handleViewInvoice = async (projectId) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`${local_uri}/api/payments/project/${projectId}/invoices`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(
+        `${local_uri}/api/payments/project/${projectId}/invoices`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (response.data.success) {
         setInvoices(response.data.invoices);
@@ -425,15 +433,16 @@ export default function Dashboard() {
     }
   };
 
-
   // Filter tickets based on search term and status filter
   useEffect(() => {
     let filtered = [...reports];
 
     // Apply status filter
-    if (reportStatusFilter !== 'all') {
-      filtered = filtered.filter(ticket => 
-        ticket.report_status.toLowerCase() === reportStatusFilter.toLowerCase()
+    if (reportStatusFilter !== "all") {
+      filtered = filtered.filter(
+        (ticket) =>
+          ticket.report_status.toLowerCase() ===
+          reportStatusFilter.toLowerCase()
       );
     }
 
@@ -469,29 +478,28 @@ export default function Dashboard() {
         },
       ]
     : [];
-  
-    useEffect(() => {
-      const fetchDomains = async () => {
-        try {
-          const response = await axios.get(`${local_uri}/api/users/domains`, {
-          });
-          setDomains(response.data.domains);
-        } catch (error) {
-          console.error("Failed to fetch domains:", error);
-        }
-      };
-    
-      fetchDomains();
-    }, []);
 
-    const handleDownload = (url, filename) => {
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    };    
+  useEffect(() => {
+    const fetchDomains = async () => {
+      try {
+        const response = await axios.get(`${local_uri}/api/users/domains`, {});
+        setDomains(response.data.domains);
+      } catch (error) {
+        console.error("Failed to fetch domains:", error);
+      }
+    };
+
+    fetchDomains();
+  }, []);
+
+  const handleDownload = (url, filename) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 w-full">
@@ -590,7 +598,6 @@ export default function Dashboard() {
               <span>Domains</span>
             </button>
           </div>
-
         </nav>
       </div>
 
@@ -652,7 +659,10 @@ export default function Dashboard() {
                 </div>
 
                 {/* Status Filter */}
-                <Select value={projectStatusFilter} onValueChange={setProjectStatusFilter}>
+                <Select
+                  value={projectStatusFilter}
+                  onValueChange={setProjectStatusFilter}
+                >
                   <SelectTrigger className="w-full md:w-40">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
@@ -714,73 +724,88 @@ export default function Dashboard() {
                         }
                       </p>
 
-                      {/* Edit Icon - Prevent click propagation to not trigger details popup */}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(project);
-                            }}
-                            className="absolute top-2 right-2 text-gray-500 hover:text-blue-600"
-                          >
-                            <Pencil size={18} />
-                          </button>
-                        </AlertDialogTrigger>
-                        {selectedProject?.id === project.id && (
-                          <div className="dark:bg-gray-900">
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Edit Domain</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  You can update the domain for{" "}
-                                  <strong>{selectedProject.name}</strong>.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
+                      {/* Edit Icon - Fixed to properly prevent click propagation */}
+                      <div
+                        className="absolute top-2 right-2"
+                        onClick={(e) => e.stopPropagation()} // This is key - stops ALL clicks in this area
+                      >
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              onClick={() => {
+                                handleEditClick(project); // Set selectedProject and open dialog
+                                setIsEditDialogOpen(true);
+                              }}
+                              className="border rounded-sm bg-gray-700 p-2 dark:text-white text-gray-500 hover:text-blue-600"
+                            >
+                              <Pencil size={18} />
+                            </button>
+                          </AlertDialogTrigger>
+                          {selectedProject?.id === project.id && (
+                            <div className="dark:bg-gray-900">
+                              <AlertDialogContent
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Edit Domain
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    You can update the domain for{" "}
+                                    <strong>{selectedProject.name}</strong>.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
 
-                              <div className="mt-4 space-y-2">
-                                <div className="text-sm text-gray-600 dark:text-gray-300">
-                                  <strong>Project Name:</strong>{" "}
-                                  {selectedProject.name}
+                                <div className="mt-4 space-y-2">
+                                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                                    <strong>Project Name:</strong>{" "}
+                                    {selectedProject.name}
+                                  </div>
+
+                                  <Select
+                                    value={newDomain}
+                                    onValueChange={handleDomainChange}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select a domain" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {domains.map((domain) => (
+                                        <SelectItem
+                                          key={domain.domain_id}
+                                          value={domain.domain_name}
+                                        >
+                                          {domain.domain_name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
 
-                                <Select
-                                  value={newDomain}
-                                  onValueChange={handleDomainChange}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a domain" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {domains.map((domain) => (
-                                      <SelectItem 
-                                        key={domain.domain_id} 
-                                        value={domain.domain_name}
-                                      >
-                                        {domain.domain_name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              <AlertDialogFooter>
-                                <AlertDialogCancel
-                                  onClick={() => setSelectedProject(null)}
-                                >
-                                  Cancel
-                                </AlertDialogCancel>
-                                <AlertDialogAction onClick={handleSave}>
-                                  Save
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </div>
-                        )}
-                      </AlertDialog>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel
+                                    onClick={() => {
+                                      setSelectedProject(null);
+                                      setIsEditDialogOpen(false);
+                                    }}
+                                  >
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleSave}>
+                                    Save
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </div>
+                          )}
+                        </AlertDialog>
+                      </div>
 
                       {project.project_status === "approved" && (
-                        <div className="absolute bottom-4 right-4">
+                        <div
+                          className="absolute bottom-4 right-4"
+                          onClick={(e) => e.stopPropagation()} // Prevent payment buttons from triggering parent click
+                        >
                           {project.payment_status === "paid" ? (
                             <span className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-default">
                               Paid
@@ -788,9 +813,12 @@ export default function Dashboard() {
                           ) : (
                             <>
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openModal(project.project_id, project.paid_amount, project.total_amount);
+                                onClick={() => {
+                                  openModal(
+                                    project.project_id,
+                                    project.paid_amount,
+                                    project.total_amount
+                                  );
                                 }}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-green-500"
                               >
@@ -803,7 +831,9 @@ export default function Dashboard() {
                                 pendingAmount={pendingAmount}
                                 projectId={selectedProject}
                                 handlePayNow={handlePayNow}
-                                setSelectedProjectForDetails={setSelectedProjectForDetails}
+                                setSelectedProjectForDetails={
+                                  setSelectedProjectForDetails
+                                }
                                 project={project}
                               />
                             </>
@@ -821,7 +851,8 @@ export default function Dashboard() {
             )}
 
             {/* Project Details Dialog */}
-            <Dialog asChild
+            <Dialog
+              asChild
               open={!!selectedProjectForDetails}
               onOpenChange={(isOpen) => {
                 if (!isOpen) setSelectedProjectForDetails(null);
@@ -979,25 +1010,31 @@ export default function Dashboard() {
                       selectedProjectForDetails.project_status === "approved" &&
                       selectedProjectForDetails.payment_status !== "paid" && (
                         <>
-                        <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openModal(selectedProjectForDetails.project_id, selectedProjectForDetails.paid_amount, selectedProjectForDetails.total_amount);
-                                }}
-                                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition"
-                              >
-                                Pay Now
-                              </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal(
+                                selectedProjectForDetails.project_id,
+                                selectedProjectForDetails.paid_amount,
+                                selectedProjectForDetails.total_amount
+                              );
+                            }}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition"
+                          >
+                            Pay Now
+                          </button>
 
-                              <PaymentModal
-                                isOpen={showModal}
-                                onClose={() => setShowModal(false)}
-                                pendingAmount={pendingAmount}
-                                projectId={selectedProject}
-                                handlePayNow={handlePayNow}
-                                setSelectedProjectForDetails={setSelectedProjectForDetails}
-                                project={selectedProjectForDetails}
-                              />
+                          <PaymentModal
+                            isOpen={showModal}
+                            onClose={() => setShowModal(false)}
+                            pendingAmount={pendingAmount}
+                            projectId={selectedProject}
+                            handlePayNow={handlePayNow}
+                            setSelectedProjectForDetails={
+                              setSelectedProjectForDetails
+                            }
+                            project={selectedProjectForDetails}
+                          />
                         </>
                       )}
                   </div>
@@ -1025,24 +1062,34 @@ export default function Dashboard() {
                       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                         <h2 className="text-xl font-bold mb-4">Invoices</h2>
                         <ul className="space-y-3 max-h-80 overflow-y-auto">
-                          {invoices.length > 0 ? (invoices.map((inv) => (
-                            <li key={inv.payment_id} className="flex justify-between items-center">
-                              <div>
-                                <p className="text-sm text-gray-700">
-                                  ₹{inv.paid_amount} - {inv.payment_method} - {new Date(inv.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                              <a
-                                href={`${local_uri}${inv.invoice_url}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                          {invoices.length > 0 ? (
+                            invoices.map((inv) => (
+                              <li
+                                key={inv.payment_id}
+                                className="flex justify-between items-center"
                               >
-                                View PDF
-                              </a>
-                            </li>
-                          ))) : (
-                            <p className="text-black dark:text-white">No payments done Yet.</p>
+                                <div>
+                                  <p className="text-sm text-gray-700">
+                                    ₹{inv.paid_amount} - {inv.payment_method} -{" "}
+                                    {new Date(
+                                      inv.created_at
+                                    ).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <a
+                                  href={`${local_uri}${inv.invoice_url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                                >
+                                  View PDF
+                                </a>
+                              </li>
+                            ))
+                          ) : (
+                            <p className="text-black dark:text-white">
+                              No payments done Yet.
+                            </p>
                           )}
                         </ul>
                         <button
@@ -1054,7 +1101,6 @@ export default function Dashboard() {
                       </div>
                     </div>
                   )}
-
                 </div>
               </DialogContent>
             </Dialog>
@@ -1117,7 +1163,7 @@ export default function Dashboard() {
                   <select
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={reportStatusFilter}
-onChange={(e) => setReportStatusFilter(e.target.value)}
+                    onChange={(e) => setReportStatusFilter(e.target.value)}
                   >
                     <option value="all">All</option>
                     <option value="open">Open</option>
@@ -1203,7 +1249,7 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
 
                 {/* Ticket Detail Dialog */}
                 {selectedTicket && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-screen overflow-y-auto">
                       <div className="p-6">
                         <div className="flex justify-between items-start mb-6">
@@ -1410,14 +1456,20 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                           <span className="flex items-center">
                             <span
                               className={`w-2 h-2 mr-2 rounded-full ${getStatusStyle(
-                                payment.payment_status==="pending" ? "failed" : payment.payment_status
+                                payment.payment_status === "pending"
+                                  ? "failed"
+                                  : payment.payment_status
                               )}`}
                             ></span>
                             <span className="text-sm text-gray-700 dark:text-gray-300">
                               {payment.payment_status === "partially_paid"
                                 ? "Partially Paid"
-                                : payment.payment_status === "pending" ? "Failed" : payment.payment_status.charAt(0).toUpperCase() +payment.payment_status.slice(1)
-                                    }
+                                : payment.payment_status === "pending"
+                                ? "Failed"
+                                : payment.payment_status
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  payment.payment_status.slice(1)}
                             </span>
                           </span>
                         </td>
@@ -1466,7 +1518,10 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                             {selectedPayment.project_name}
                           </h4>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Payment ID: {selectedPayment.order_id ? selectedPayment.order_id : 'N/A'}
+                            Payment ID:{" "}
+                            {selectedPayment.order_id
+                              ? selectedPayment.order_id
+                              : "N/A"}
                           </p>
                         </div>
                         <div className="flex items-center">
@@ -1518,18 +1573,26 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                           ₹{selectedPayment.pending_amount?.toLocaleString()}
                         </p>
                       </div>
-                      {selectedPayment.payment_status === 'success' ? (
+                      {selectedPayment.payment_status === "success" ? (
                         <button
-                        onClick={() =>
-                            selectedPayment.invoice_url ? open(`${local_uri}${selectedPayment.invoice_url}`) : toast.error("No invoice avaialble for this payment")
+                          onClick={() =>
+                            selectedPayment.invoice_url
+                              ? open(
+                                  `${local_uri}${selectedPayment.invoice_url}`
+                                )
+                              : toast.error(
+                                  "No invoice avaialble for this payment"
+                                )
                           }
                           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center"
                         >
                           <FileText size={16} className="mr-2" />
                           View Invoice
-                      </button>
+                        </button>
                       ) : (
-                        <p className="text-orange-500 dark:text-white text-nowrap">No invoice avaialble for this payment</p>
+                        <p className="text-orange-500 dark:text-white text-nowrap">
+                          No invoice avaialble for this payment
+                        </p>
                       )}
                     </div>
 
@@ -1619,35 +1682,37 @@ onChange={(e) => setReportStatusFilter(e.target.value)}
                 </div>
               </div>
             )}
-
-
           </div>
         )}
         {activeSection === "domain" && (
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">Domains</h2>
-          </div>
-          {Array.isArray(domains) && domains.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6">
-            {domains.map((domain) => (
-              <div key={domain.domain_id} className="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800">
-                <h3 className="text-xl font-semibold mb-4 dark:text-white">{domain.domain_name}</h3>
-                <a
-                href={`${local_uri}/download${domain.pdf_url}`}
-                className="inline-block bg-blue-500 text-white py-2 px-4 rounded-lg text-center"
-              >
-                Download PDF
-              </a>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">Domains</h2>
+            </div>
+            {Array.isArray(domains) && domains.length > 0 ? (
+              <div className="grid grid-cols-3 gap-6">
+                {domains.map((domain) => (
+                  <div
+                    key={domain.domain_id}
+                    className="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800"
+                  >
+                    <h3 className="text-xl font-semibold mb-4 dark:text-white">
+                      {domain.domain_name}
+                    </h3>
+                    <a
+                      href={`${local_uri}/download${domain.pdf_url}`}
+                      className="inline-block bg-blue-500 text-white py-2 px-4 rounded-lg text-center"
+                    >
+                      Download PDF
+                    </a>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <p>No domain PDFs found.</p>
+            )}
           </div>
-        ) : (
-          <p>No domain PDFs found.</p>
         )}
-        </div>
-)}
-
       </div>
       <ToastContainer />
     </div>
