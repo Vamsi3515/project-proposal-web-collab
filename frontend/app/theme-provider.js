@@ -1,4 +1,4 @@
-"use client"; // This makes it a Client Component
+"use client";
 
 import { ThemeProvider } from "next-themes";
 

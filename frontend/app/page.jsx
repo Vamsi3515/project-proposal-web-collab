@@ -4,8 +4,10 @@ import AuthForm from "../components/AuthForm";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col gap-10 items-center justify-center bg-gray-100 dark:bg-gray-900 text-black dark:text-white relative">
-      <div className="absolute top-4 right-4"><ThemeToggle /></div>
-      <AuthForm /> 
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      <AuthForm />
     </div>
   );
 }

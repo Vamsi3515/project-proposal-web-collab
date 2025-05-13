@@ -1,4 +1,4 @@
-"use client"; // This is a client component
+"use client";
 import { useState, useEffect } from "react";
 import {
   ChevronDown,
@@ -25,8 +25,6 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-// Main Dashboard Component
-
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -50,11 +48,10 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   const handleSectionChange = (section) => {
-    resetFilters(); // This uses your existing resetFilters function
+    resetFilters();
     setActiveSection(section);
   };
 
-  // Fetch data when component mounts
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -85,14 +82,14 @@ export default function AdminDashboard() {
 
     fetchData();
   }, []);
-  // Helper function to check if a date is in range
+
   const isDateInRange = (projectDate, dateType = "delivery") => {
     if (!startDate && !endDate) return true;
-  
+
     const date = new Date(projectDate);
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
-  
+
     if (start && end) {
       return date >= start && date <= end;
     } else if (start) {
@@ -102,7 +99,7 @@ export default function AdminDashboard() {
     }
     return true;
   };
-  
+
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     router.push("/admin/login");
@@ -153,13 +150,11 @@ export default function AdminDashboard() {
     }
   };
 
-  // Simulate a refund request
   const handleRefund = async () => {
     if (!selectedPayment) return;
 
     setIsLoading(true);
 
-    // Simulate API call for refund
     setTimeout(() => {
       const updatedPayments = payments.map((payment) =>
         payment.payment_id === selectedPayment.id
@@ -174,9 +169,7 @@ export default function AdminDashboard() {
     }, 2000);
   };
 
-  // Enhanced filtering logic for projects
   const filteredProjects = projects.filter((project) => {
-    // First apply the search query to multiple fields
     const searchMatches =
       searchQuery === "" ||
       (project.project_name || "")
@@ -201,7 +194,6 @@ export default function AdminDashboard() {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
 
-    // Then apply the status filters
     const projectStatusMatches =
       projectStatusFilter === "" ||
       (project.project_status || "").toLowerCase() ===
@@ -212,24 +204,32 @@ export default function AdminDashboard() {
       (project.payment_status || "").toLowerCase() ===
         paymentStatusFilter.toLowerCase();
 
-        const dateMatches = (!startDate && !endDate) || isDateInRange(
-          dateFilterType === "delivery" ? project.delivery_date : project.created_at,
-          dateFilterType
-        );
-    // Return true only if all conditions are met
-    return searchMatches && projectStatusMatches && paymentStatusMatches && dateMatches;
+    const dateMatches =
+      (!startDate && !endDate) ||
+      isDateInRange(
+        dateFilterType === "delivery"
+          ? project.delivery_date
+          : project.created_at,
+        dateFilterType
+      );
+    return (
+      searchMatches &&
+      projectStatusMatches &&
+      paymentStatusMatches &&
+      dateMatches
+    );
   });
 
-      const projectStatuses = [
-        ...new Set(projects.map((p) => p.project_status).filter(Boolean)),
-      ];
-      const paymentStatuses = [
-        ...new Set(projects.map((p) => p.payment_status).filter(Boolean)),
-      ];
+  const projectStatuses = [
+    ...new Set(projects.map((p) => p.project_status).filter(Boolean)),
+  ];
+  const paymentStatuses = [
+    ...new Set(projects.map((p) => p.payment_status).filter(Boolean)),
+  ];
 
-      const reportStatuses = [
-        ...new Set(reports.map((r) => r.report_status).filter(Boolean)),
-      ];
+  const reportStatuses = [
+    ...new Set(reports.map((r) => r.report_status).filter(Boolean)),
+  ];
 
   const filteredReports = reports.filter((report) => {
     const searchMatches =
@@ -254,7 +254,6 @@ export default function AdminDashboard() {
         .includes(searchQuery.toLowerCase())
   );
 
-  // Handle section selection
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
@@ -294,8 +293,7 @@ export default function AdminDashboard() {
             onRefundRequest={(payment) => {
               setSelectedPayment(payment);
               setShowRefundModal(true);
-            }
-          }
+            }}
           />
         );
       default:
@@ -310,20 +308,18 @@ export default function AdminDashboard() {
     }
   };
 
-  // Reset filters function
   const resetFilters = () => {
     setSearchQuery("");
     setProjectStatusFilter("");
     setReportStatusFilter("");
     setPaymentStatusFilter("");
     setStartDate("");
-setEndDate("");
-setDateFilterType("delivery");
+    setEndDate("");
+    setDateFilterType("delivery");
   };
 
   return (
     <div className="flex h-screen w-full bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
-      {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? "w-64" : "w-20"
@@ -390,21 +386,16 @@ setDateFilterType("delivery");
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
         <header className="bg-white shadow-sm z-10 dark:bg-gray-800 text-black">
           <div className="px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-            {/* Title */}
             <h2 className="text-lg text-black font-medium dark:text-white">
               {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
             </h2>
 
-            {/* Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
               <ThemeToggle />
 
-              {/* Search and filter section */}
               <div className="relative flex items-center w-full sm:w-auto">
                 <input
                   type="text"
@@ -418,7 +409,6 @@ setDateFilterType("delivery");
                   className="absolute left-3 top-2.5 text-gray-400"
                 />
 
-                {/* Filter button */}
                 <button
                   className={`ml-2 p-2 rounded-lg text-black border border-gray-300 dark:text-white  dark:hover:bg-black ${showFilters}`}
                   onClick={() => setShowFilters(!showFilters)}
@@ -426,7 +416,6 @@ setDateFilterType("delivery");
                   <Filter size={18} />
                 </button>
 
-                {/* Clear filters */}
                 {(searchQuery ||
                   projectStatusFilter ||
                   paymentStatusFilter) && (
@@ -440,7 +429,6 @@ setDateFilterType("delivery");
                 )}
               </div>
 
-              {/* Logout Button */}
               <Button
                 onClick={handleLogout}
                 className="cursor-pointer flex items-center gap-2"
@@ -450,7 +438,6 @@ setDateFilterType("delivery");
             </div>
           </div>
 
-          {/* Filters for projects */}
           {showFilters && activeSection === "projects" && (
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-4">
               <div className="flex items-center">
@@ -489,42 +476,47 @@ setDateFilterType("delivery");
                 </select>
               </div>
               <div className="flex items-center flex-wrap gap-2">
-              <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">Filter By:</label>
-                <select
-                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
-                  value={dateFilterType}
-                  onChange={(e) => setDateFilterType(e.target.value)}
-                >
-                  <option value="delivery">Delivery Date</option>
-                  <option value="created">Creation Date</option>
-                </select>
-              </div>
-              
-              <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">From:</label>
-                <input
-                  type="date"
-                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <label className="mr-2 text-sm font-medium text-gray-700">To:</label>
-                <input
-                  type="date"
-                  className="p-2 border border-gray-300 rounded-md text-sm text-black"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-            </div>
-            </div>
+                <div className="flex items-center">
+                  <label className="mr-2 text-sm font-medium text-gray-700">
+                    Filter By:
+                  </label>
+                  <select
+                    className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                    value={dateFilterType}
+                    onChange={(e) => setDateFilterType(e.target.value)}
+                  >
+                    <option value="delivery">Delivery Date</option>
+                    <option value="created">Creation Date</option>
+                  </select>
+                </div>
 
+                <div className="flex items-center">
+                  <label className="mr-2 text-sm font-medium text-gray-700">
+                    From:
+                  </label>
+                  <input
+                    type="date"
+                    className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <label className="mr-2 text-sm font-medium text-gray-700">
+                    To:
+                  </label>
+                  <input
+                    type="date"
+                    className="p-2 border border-gray-300 rounded-md text-sm text-black"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           )}
-          {/*Reports Filter*/}
+
           {showFilters && activeSection === "reports" && (
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-4">
               <div className="flex items-center">
@@ -548,14 +540,12 @@ setDateFilterType("delivery");
           )}
         </header>
 
-        {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-6">{renderContent()}</main>
       </div>
-
     </div>
   );
 }
-// Navigation Item Component
+
 const NavItem = ({ icon, label, isActive, onClick, showLabel }) => {
   return (
     <button
@@ -570,7 +560,6 @@ const NavItem = ({ icon, label, isActive, onClick, showLabel }) => {
   );
 };
 
-// Dashboard Content Component
 const DashboardContent = ({
   isLoading,
   projects,
@@ -582,7 +571,6 @@ const DashboardContent = ({
   const recentReports = reports.slice(0, 3);
   const recentPayments = payments.slice(0, 3);
 
-  // Calculate summary stats
   const projectsRejected = projects.filter(
     (p) => p.project_status === "rejected"
   ).length;
@@ -595,7 +583,7 @@ const DashboardContent = ({
     (sum, payment) => sum + Number(payment.paid_amount || 0),
     0
   );
-  
+
   const refundedPayments = payments.filter(
     (p) => p.payment_status === "refunded"
   ).length;
@@ -616,7 +604,6 @@ const DashboardContent = ({
   const [editName, setEditName] = useState("");
   const [editFile, setEditFile] = useState(null);
 
-  //fetch domains
   useEffect(() => {
     axios
       .get(`${local_uri}/api/admin/domains`, {
@@ -660,7 +647,6 @@ const DashboardContent = ({
     }
   };
 
-  // Upload + add new domain
   const handleNewDomainUpload = async () => {
     if (!newDomain || !newFile) {
       toast.error("Please enter domain name and select a file");
@@ -722,7 +708,7 @@ const DashboardContent = ({
   const handleEditClick = (domain) => {
     setEditDomain(domain);
     setEditName(domain.domain_name);
-    setEditFile(null); // reset file input
+    setEditFile(null);
   };
 
   const handleEditSubmit = async () => {
@@ -761,7 +747,6 @@ const DashboardContent = ({
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Projects"
@@ -788,7 +773,6 @@ const DashboardContent = ({
         />
       </div>
 
-      {/* Recent Projects */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Recent Projects</h3>
@@ -841,9 +825,7 @@ const DashboardContent = ({
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Reports */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Recent Reports</h3>
@@ -862,7 +844,6 @@ const DashboardContent = ({
                 className="flex items-center p-3 rounded-lg transition-colors 
                  hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                {/* Icon */}
                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                   <BarChart2
                     size={16}
@@ -870,7 +851,6 @@ const DashboardContent = ({
                   />
                 </div>
 
-                {/* Report Info */}
                 <div className="ml-4 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
                     {report.title}
@@ -880,7 +860,6 @@ const DashboardContent = ({
                   </p>
                 </div>
 
-                {/* Status */}
                 <span className="text-xs font-medium text-gray-500 dark:text-gray-400 dark:hover:text-gray-100">
                   {report.report_status}
                 </span>
@@ -888,8 +867,6 @@ const DashboardContent = ({
             ))}
           </ul>
         </div>
-
-        {/* Recent Payments */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Recent Payments</h3>
@@ -906,7 +883,6 @@ const DashboardContent = ({
                 key={payment.payment_id || index}
                 className="flex items-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition-colors"
               >
-                {/* Icon */}
                 <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
                   <CreditCard
                     size={16}
@@ -914,7 +890,6 @@ const DashboardContent = ({
                   />
                 </div>
 
-                {/* Project Info */}
                 <div className="ml-4 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {payment.project_code}
@@ -924,7 +899,6 @@ const DashboardContent = ({
                   </p>
                 </div>
 
-                {/* Amount + Status */}
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
                     ₹{Number(payment.total_amount || 0).toFixed(2)}
@@ -937,13 +911,11 @@ const DashboardContent = ({
         </div>
       </div>
 
-      {/* Upload Domain PDF Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-medium mb-6 text-center">
           Upload Domain PDF
         </h3>
 
-        {/* Centered Add New Domain Block */}
         <div className="flex justify-center mb-10">
           <div className="w-full max-w-md border border-gray-200 dark:border-gray-700 rounded-lg p-6">
             <h4 className="text-md font-semibold mb-4 text-center">
@@ -985,7 +957,6 @@ const DashboardContent = ({
           </div>
         </div>
 
-        {/* Edit Section */}
         {editDomain && (
           <div className="bg-gray-100 dark:bg-gray-700 p-4 mt-6 rounded-lg max-w-xl mx-auto">
             <h4 className="font-semibold mb-2">
@@ -1020,7 +991,6 @@ const DashboardContent = ({
           </div>
         )}
 
-        {/* Domain Cards List */}
         {domains.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-4">Manage Domains</h3>
@@ -1048,14 +1018,13 @@ const DashboardContent = ({
                     >
                       Edit
                     </button>
-                    
+
                     <button
                       onClick={() => handleDeleteDomain(domain.domain_id)}
                       className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
                     >
                       Delete
                     </button>
-                    
                   </div>
                 </div>
               ))}
@@ -1078,32 +1047,6 @@ import {
   RefundDialog,
 } from "./AdminDashboardModals";
 
-// // Loading State Component
-// const LoadingState = () => (
-//   <div className="p-8 text-center">
-//     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-//     <p className="mt-2 text-gray-600">Loading reports...</p>
-//   </div>
-// );
-
-// Status Badge Component
-// const StatusBadge = ({ status }) => {
-//   const getStatusClass = (status) => {
-//     switch (status.toLowerCase()) {
-//       case 'open':
-//         return 'bg-green-100 text-green-800';
-//       case 'closed':
-//         return 'bg-gray-100 text-gray-800';
-//       case 'pending':
-//         return 'bg-yellow-100 text-yellow-800';
-//       case 'urgent':
-//         return 'bg-red-100 text-red-800';
-//       default:
-//         return 'bg-blue-100 text-blue-800';
-//     }
-//   };
-
-
 const ProjectsContent = ({
   isLoading,
   projects,
@@ -1115,7 +1058,7 @@ const ProjectsContent = ({
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showRefundModal, setShowRefundModal] = useState(false); // New state for refund modal
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   if (isLoading) {
     return <LoadingState />;
@@ -1244,8 +1187,8 @@ const ProjectsContent = ({
   };
 
   const handleRefund = async (payment_id, refundAmount) => {
-    console.log("Payment  Id: ",payment_id);
-    console.log("Refund Payment : ",refundAmount);
+    console.log("Payment  Id: ", payment_id);
+    console.log("Refund Payment : ", refundAmount);
     if (!payment_id) {
       alert("Invalid payment ID");
       return;
@@ -1254,8 +1197,8 @@ const ProjectsContent = ({
       const token = localStorage.getItem("adminToken");
       const res = await axios.post(
         `${local_uri}/api/admin/payments/refund/${payment_id}`,
-        { 
-          amount: refundAmount 
+        {
+          amount: refundAmount,
         },
         {
           headers: {
@@ -1264,7 +1207,7 @@ const ProjectsContent = ({
           },
         }
       );
-      
+
       toast.success("Refund processed successfully!");
       setShowRefundModal(false);
       fetchProjects();
@@ -1275,7 +1218,6 @@ const ProjectsContent = ({
   };
 
   const handleProjectUpdate = (updatedProject) => {
-    // Update the project in the local state
     const updatedProjects = projects.map((p) =>
       p.project_id === updatedProject.project_id ? updatedProject : p
     );
@@ -1415,20 +1357,19 @@ const ProjectsContent = ({
                         </>
                       )}
                       {/* Updated Refund button*/}
-                      {project.payment_status && 
-                       project.payment_status !== "refunded" && 
-                       project.payment_status !== "pending" && (
-                        <button
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setShowRefundModal(true);
-
-                          }}
-                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-                        >
-                          Refund
-                        </button>
-                      )}
+                      {project.payment_status &&
+                        project.payment_status !== "refunded" &&
+                        project.payment_status !== "pending" && (
+                          <button
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setShowRefundModal(true);
+                            }}
+                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                          >
+                            Refund
+                          </button>
+                        )}
                       <button
                         onClick={() => {
                           setSelectedProject(project);
@@ -1495,8 +1436,6 @@ const ProjectsContent = ({
           }
         />
       )}
-
-      {/* Add RefundDialog modal */}
       {selectedProject && showRefundModal && (
         <RefundDialog
           payment={selectedProject}
@@ -1509,9 +1448,6 @@ const ProjectsContent = ({
   );
 };
 
-// Reports Content Component
-
-// Main ReportsContent Component
 const ReportsContent = ({
   isLoading,
   reports,
@@ -1709,7 +1645,6 @@ const ReportsContent = ({
         </table>
       </div>
 
-      {/* Modals */}
       {selectedReport && showViewModal && (
         <ReportViewModal
           report={selectedReport}
@@ -1737,8 +1672,6 @@ const ReportsContent = ({
   );
 };
 
-// Payments Content Component
-
 const PaymentsContent = ({
   isLoading,
   payments,
@@ -1762,7 +1695,7 @@ const PaymentsContent = ({
 
   const handleSetRefundDialogOpen = (show) => {
     setRefundDialogOpen(show);
-  }
+  };
 
   const handleConfirmRefund = (payment, refundAmount) => {
     setRefundAmount(refundAmount);
@@ -1830,7 +1763,9 @@ const PaymentsContent = ({
                   className="hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {payment.razorpay_payment_id ? payment.razorpay_payment_id : 'N/A'}
+                    {payment.razorpay_payment_id
+                      ? payment.razorpay_payment_id
+                      : "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {payment.project_code}
@@ -1869,18 +1804,24 @@ const PaymentsContent = ({
                     {new Date(payment.created_at).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {payment.payment_status === 'success' ? (
+                    {payment.payment_status === "success" ? (
                       <button
-                      onClick={() =>
-                          payment.invoice_url ? open(`${local_uri}${payment.invoice_url}`) : toast.error("No invoice avaialble for this payment")
+                        onClick={() =>
+                          payment.invoice_url
+                            ? open(`${local_uri}${payment.invoice_url}`)
+                            : toast.error(
+                                "No invoice avaialble for this payment"
+                              )
                         }
                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center"
                       >
                         <FileText size={16} className="mr-2" />
                         Open Invoice
-                    </button>
+                      </button>
                     ) : (
-                      <p className="text-red-500 dark:text-red text-nowrap">No invoice avaialble</p>
+                      <p className="text-red-500 dark:text-red text-nowrap">
+                        No invoice avaialble
+                      </p>
                     )}
                   </td>
                 </tr>
@@ -1898,8 +1839,6 @@ const PaymentsContent = ({
           </tbody>
         </table>
       </div>
-
-      {/* Refund Dialog */}
       <RefundDialog
         isOpen={refundDialogOpen}
         payment={selectedPayment}
@@ -1910,16 +1849,14 @@ const PaymentsContent = ({
   );
 };
 
-// Loading State Component
 const LoadingState = () => {
   return (
     <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500 border-solid"></div>
+      <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500 border-solid"></div>
     </div>
   );
 };
 
-// Status Badge Component
 const StatusBadge = ({ status }) => {
   let bgColor = "bg-gray-100";
   let textColor = "text-gray-800";
@@ -1966,7 +1903,6 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// Payment Status Badge Component
 const PaymentStatusBadge = ({ status }) => {
   let bgColor = "bg-gray-100";
   let textColor = "text-gray-800";
@@ -2016,7 +1952,6 @@ const PaymentStatusBadge = ({ status }) => {
   );
 };
 
-// Stat Card Component
 const StatCard = ({ title, value, subtitle }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

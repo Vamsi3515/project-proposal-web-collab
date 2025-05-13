@@ -236,7 +236,6 @@ export default function Dashboard() {
     setShowNewProject(false);
     setShowReportIssue(false);
 
-    // Reset appropriate filters based on the section
     if (section === "projects") {
       setProjectStatusFilter("All");
     } else if (section === "reports") {
@@ -248,14 +247,12 @@ export default function Dashboard() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Handler for project addition completion
   const handleProjectAdded = () => {
     setShowNewProject(false);
-    fetchProjects(); // Refresh projects after adding
+    fetchProjects();
     console.log("Project added successfully!");
   };
 
-  //colors decllaration for status
   const getStatusStyle = (status) => {
     switch (status) {
       case "accepted & payment pending":
@@ -291,7 +288,6 @@ export default function Dashboard() {
     }
   };
 
-  // Filter projects based on search and status for rendering
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -413,7 +409,6 @@ export default function Dashboard() {
     console.log("Downloading all files for project:", projectId);
   };
 
-  // For invoice generation
   const handleViewInvoice = async (projectId) => {
     const token = localStorage.getItem("token");
     try {
@@ -433,11 +428,9 @@ export default function Dashboard() {
     }
   };
 
-  // Filter tickets based on search term and status filter
   useEffect(() => {
     let filtered = [...reports];
 
-    // Apply status filter
     if (reportStatusFilter !== "all") {
       filtered = filtered.filter(
         (ticket) =>
@@ -446,7 +439,6 @@ export default function Dashboard() {
       );
     }
 
-    // Apply search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -459,7 +451,6 @@ export default function Dashboard() {
     setFilteredTickets(filtered);
   }, [reports, searchTerm, reportStatusFilter]);
 
-  // Function to handle viewing a ticket
   const handleViewTicket = (ticket) => {
     setSelectedTicket(ticket);
   };
@@ -503,7 +494,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 w-full">
-      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-800 shadow transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -524,7 +514,6 @@ export default function Dashboard() {
         </div>
 
         <nav className="mt-4">
-          {/* Projects Section - No subsections */}
           <div
             className={`mb-1 ${
               activeSection === "projects" ? "bg-blue-50 dark:bg-gray-700" : ""
@@ -543,7 +532,6 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Reports Section - No subsections */}
           <div
             className={`mb-1 ${
               activeSection === "reports" ? "bg-blue-50 dark:bg-gray-700" : ""
@@ -562,7 +550,6 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Payments Section - No subsections */}
           <div
             className={`mb-1 ${
               activeSection === "payments" ? "bg-blue-50 dark:bg-gray-700" : ""
@@ -601,9 +588,7 @@ export default function Dashboard() {
         </nav>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        {/* Top Nav with Hamburger Menu */}
         <div className="bg-white dark:bg-gray-800 shadow p-4 flex items-center justify-between">
           <div className="flex items-center">
             {isMobile && (
@@ -630,8 +615,6 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Projects Section */}
-
         {activeSection === "projects" && (
           <div className="p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
@@ -643,7 +626,6 @@ export default function Dashboard() {
               </button>
 
               <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
-                {/* Search Input */}
                 <div className="relative">
                   <input
                     type="text"
@@ -658,7 +640,6 @@ export default function Dashboard() {
                   />
                 </div>
 
-                {/* Status Filter */}
                 <Select
                   value={projectStatusFilter}
                   onValueChange={setProjectStatusFilter}
@@ -724,16 +705,15 @@ export default function Dashboard() {
                         }
                       </p>
 
-                      {/* Edit Icon - Fixed to properly prevent click propagation */}
                       <div
                         className="absolute top-2 right-2"
-                        onClick={(e) => e.stopPropagation()} // This is key - stops ALL clicks in this area
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <button
                               onClick={() => {
-                                handleEditClick(project); // Set selectedProject and open dialog
+                                handleEditClick(project);
                                 setIsEditDialogOpen(true);
                               }}
                               className="border rounded-sm dark:bg-gray-200 p-2 dark:text-black text-gray-500 hover:text-blue-600"
@@ -804,7 +784,7 @@ export default function Dashboard() {
                       {project.project_status === "approved" && (
                         <div
                           className="absolute bottom-4 right-4"
-                          onClick={(e) => e.stopPropagation()} // Prevent payment buttons from triggering parent click
+                          onClick={(e) => e.stopPropagation()}
                         >
                           {project.payment_status === "paid" ? (
                             <span className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-default">
@@ -1158,8 +1138,6 @@ export default function Dashboard() {
                       </svg>
                     </span>
                   </div>
-
-                  {/* Status filter */}
                   <select
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={reportStatusFilter}
@@ -1247,7 +1225,6 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Ticket Detail Dialog */}
                 {selectedTicket && (
                   <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-screen overflow-y-auto">
@@ -1330,7 +1307,6 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* Files Section */}
                         <div className="mb-6">
                           <h4 className="text-md font-medium mb-2">
                             Attached File
@@ -1392,14 +1368,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Payments Section */}
         {activeSection === "payments" && (
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold">Payment Management</h2>
             </div>
 
-            {/* Payments Table */}
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
@@ -1435,7 +1409,9 @@ export default function Dashboard() {
                     filteredPayments.map((payment) => (
                       <tr key={payment.payment_id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                          {payment.razorpay_payment_id ? payment.razorpay_payment_id : "N/A"}
+                          {payment.razorpay_payment_id
+                            ? payment.razorpay_payment_id
+                            : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           {payment.project_name}

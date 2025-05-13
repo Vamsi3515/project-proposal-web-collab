@@ -58,7 +58,7 @@ const PaymentModal = ({
     >
       <div
         className="bg-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md dark:bg-gray-800"
-        onClick={(e) => e.stopPropagation()} // Prevent clicks inside modal from closing it
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-semibold mb-2">Make a Payment</h2>
         <p className="text-gray-700 mb-4 dark:text-gray-500">

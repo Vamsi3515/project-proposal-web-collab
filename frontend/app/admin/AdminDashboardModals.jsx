@@ -1,4 +1,3 @@
-// AdminDashboardModals.jsx
 import React, { useState, useEffect, useRef } from "react";
 import {
   X,
@@ -20,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-// Project View/Edit Modal
 export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showStudentDetails, setShowStudentDetails] = useState(false);
@@ -336,7 +334,6 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             </div>
           </div>
 
-          {/* PDFs Section */}
           <div className="mb-6">
             <h4 className="text-md font-medium mb-2">Project Documents</h4>
             <div className="border border-gray-200 rounded p-4">
@@ -368,62 +365,6 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
             </div>
           </div>
 
-          {/* Student Details Section */}
-          {/* <div className="mb-6">
-            {!showStudentDetails ? (
-              <button
-                onClick={() => setShowStudentDetails(true)}
-                className="flex items-center text-blue-600 hover:text-blue-800"
-              >
-                <User size={16} className="mr-2" />
-                View Student Details
-              </button>
-            ) : (
-              <div className="border border-gray-200 rounded p-4">
-                <h4 className="text-md font-medium mb-3">Student Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Student Name</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
-                      {project.full_name || 'Not Available'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Student ID</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
-                      {project.user_id || 'Not Available'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Email</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
-                      {project.user_email || 'Not Available'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">College</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
-                      {project.college["name"] || 'Not Available'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Branch</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
-                      {project.college["branch"] || 'Not Available'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Field</label>
-                    <p className="p-2 border border-gray-200 rounded bg-gray-50 dark:bg-gray-800">
-                      {project.college["domain"] || 'Not Available'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div> */}
-
-          {/* Student Details Section */}
           <div className="mb-6">
             {!showStudentDetails ? (
               <button
@@ -646,7 +587,6 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
   );
 };
 
-// Project Approval Modal
 export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
   const [price, setPrice] = useState("");
   const [error, setError] = useState("");
@@ -741,7 +681,6 @@ export const ProjectApprovalModal = ({ project, onClose, onApprove }) => {
   );
 };
 
-// Project Rejection Modal
 export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
@@ -832,7 +771,6 @@ export const ProjectRejectionModal = ({ project, onClose, onReject }) => {
   );
 };
 
-// Delete Confirmation Modal
 export const DeleteConfirmationModal = ({
   item,
   itemType,
@@ -925,9 +863,6 @@ export const DeleteConfirmationModal = ({
   );
 };
 
-// Status Badge Component
-//Reports page components
-
 const StatusBadge = ({ status }) => {
   let bgColor = "bg-gray-100";
   let textColor = "text-gray-800";
@@ -974,7 +909,6 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// Report View Modal Component
 export const ReportViewModal = ({ report, onClose, onReply }) => {
   const [reply, setReply] = useState("");
   const [files, setFiles] = useState([]);
@@ -994,7 +928,6 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
 
   const handleViewFile = (fileId) => {
     toast.info(`Viewing file ${fileId}`);
-    // Implement file viewing logic
   };
 
   return (
@@ -1059,7 +992,6 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             </div>
           </div>
 
-          {/* Files Section */}
           <div className="mb-6">
             <h4 className="text-md font-medium mb-2">Attached File</h4>
             <div className="border border-gray-200 rounded p-4">
@@ -1084,7 +1016,6 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
             </div>
           </div>
 
-          {/* Reply Section */}
           <div className="mb-4">
             <h4 className="text-md font-medium mb-2">Reply</h4>
             <div className="border border-gray-200 rounded p-4">
@@ -1123,7 +1054,6 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
   );
 };
 
-// Close Report Confirmation Modal
 export const CloseReportModal = ({ report, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
@@ -1184,7 +1114,6 @@ export const CloseReportModal = ({ report, onClose, onConfirm }) => {
   );
 };
 
-// Delete Report Confirmation Modal
 export const DeleteReportModal = ({ report, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
@@ -1248,278 +1177,6 @@ export const DeleteReportModal = ({ report, onClose, onConfirm }) => {
   );
 };
 
-// //Payments dialogs
-// export const RefundDialog = ({ isOpen, payment, onClose, onConfirmRefund }) => {
-//   if (!isOpen) return null;
-
-//   const isPending = payment.payment_status === "pending";
-
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//     <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4">
-
-//       {/* Modal Header */}
-//       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-//         <h3 className="text-lg font-medium text-black dark:text-white">Confirm Refund</h3>
-//       </div>
-
-//       {/* Modal Body */}
-//       <div className="p-6">
-//         {isPending && (
-//           <div className="flex items-start bg-yellow-50 dark:bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded mb-4">
-//             <AlertTriangle className="mr-2 mt-0.5" size={20} />
-//             <span>
-//               This user has not paid anything yet. Refund is not required.
-//             </span>
-//           </div>
-//         )}
-
-//         <div className="space-y-4">
-//   <div className="grid grid-cols-2 gap-4">
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Project ID:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">{payment.project_code}</div>
-
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Project Name:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">{payment.project_name}</div>
-
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Username:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">{payment.student_name || 'Not available'}</div>
-
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Date:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">
-//       {new Date(payment.created_at).toLocaleDateString('en-GB')}
-//     </div>
-
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Deadline:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">
-//       {payment.delivery_date ? new Date(payment.delivery_date).toLocaleDateString('en-GB') : 'Not available'}
-//     </div>
-
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Total Payment:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">₹{Number(payment.total_amount || 0).toFixed(2)}</div>
-
-//     <div className="text-sm font-medium text-gray-500 dark:text-gray-300">Payment Paid:</div>
-//     <div className="text-sm text-gray-900 dark:text-white">₹{Number(payment.paid_amount || 0).toFixed(2)}</div>
-//   </div>
-// </div>
-//       </div>
-
-//       {/* Modal Footer */}
-//       <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
-//         <button
-//           className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none"
-//           onClick={onClose}
-//         >
-//           Cancel
-//         </button>
-//         <button
-//           disabled={isPending}
-//           className={`px-4 py-2 rounded-md focus:outline-none ${
-//             isPending
-//             ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-//             : 'bg-red-600 text-white hover:bg-red-700'
-//           }`}
-//           onClick={() => onConfirmRefund(payment)}
-//         >
-//           Confirm Refund
-//         </button>
-//       </div>
-//     </div>
-//   </div>
-
-//   );
-// };
-
-//   export const RefundDialog = ({ payment, onConfirmRefund, onClose, isLoading }) => {
-
-//   if (!payment) return null;
-
-//   const [error, setError] = React.useState('');
-//   const [showProjectRefundModalOpen, setShowProjectRefundModalOpen] = useState(false);
-//   const [refundPayments, setRefundPayments] = useState([]);
-//   const [showRefundConfirmModel, setShowRefundConfirmModel] = useState(false);
-//   const isPending = payment?.payment_status === "pending";
-//   const [selectedRefundPayment, setSelectedRefundPayment] = useState([]);
-
-//   const local_uri = "http://localhost:8000";
-
-//     const fetchPaymentByProjectId = async (projectId) => {``
-//       const token = localStorage.getItem("adminToken");
-//       try {
-//         const response = await axios.get(
-//           `${local_uri}/api/admin/payments/${projectId}`,
-//           {
-//             headers: { Authorization: `Bearer ${token}` },
-//           }
-//         );
-
-//         if (response.data.success) {
-//           setRefundPayments(response.data.payments);
-//           setShowProjectRefundModalOpen(true);
-//         }
-//       } catch (error) {
-//         console.error("Error fetching invoices:", error);
-//       }
-//     };
-
-//   useEffect(() => {
-//     fetchPaymentByProjectId(payment.project_id);
-//   },[]);
-
-//   return (
-//   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-//     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden mx-4">
-
-//       {/* Header */}
-//       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-//         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">User Payments</h2>
-//       </div>
-
-//       {/* Content */}
-//       <div className="px-6 py-4 overflow-y-auto max-h-[70vh] space-y-6">
-
-//         {/* Project Info */}
-//         <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
-//           <div className="font-medium">Project ID:</div>
-//           <div>{payment.project_code}</div>
-
-//           <div className="font-medium">Project Name:</div>
-//           <div>{payment.project_name}</div>
-
-//           <div className="font-medium">Domain:</div>
-//           <div>{payment.domain || 'Not available'}</div>
-
-//           <div className="font-medium">Date:</div>
-//           <div>{new Date(payment.created_at).toLocaleDateString('en-GB')}</div>
-
-//           <div className="font-medium">Deadline:</div>
-//           <div>
-//             {payment.delivery_date
-//               ? new Date(payment.delivery_date).toLocaleDateString('en-GB')
-//               : 'Not available'}
-//           </div>
-
-//           <div className="font-medium">Total Payment:</div>
-//           <div>₹{Number(payment.total_amount || 0).toFixed(2)}</div>
-
-//           <div className="font-medium">Payment Paid:</div>
-//           <div>₹{Number(payment.paid_amount || 0).toFixed(2)}</div>
-//         </div>
-
-//         {/* Refund Section */}
-//         {showProjectRefundModalOpen && (
-//           <div className="space-y-3">
-//             {refundPayments.length > 0 ? (
-//               <ul className="space-y-3 max-h-48 overflow-y-auto pr-2">
-//                 {refundPayments.map((p) => (
-//                   <li
-//                     key={p.payment_id}
-//                     className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-md"
-//                   >
-//                     <div className="text-sm text-gray-800 dark:text-gray-200">
-//                       ₹{p.paid_amount} — {p.payment_method} —{" "}
-//                       {new Date(p.created_at).toLocaleDateString()}
-//                     </div>
-//                     <button
-//                       onClick={() => {
-//                         setShowRefundConfirmModel(true);
-//                         setSelectedRefundPayment(p);
-//                       }}
-//                       disabled={isPending || !!error}
-//                       className={`px-4 py-1.5 text-sm rounded-md transition ${
-//                         isPending || error
-//                           ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-//                           : 'bg-red-600 hover:bg-red-700 text-white'
-//                       }`}
-//                     >
-//                       Refund
-//                     </button>
-//                   </li>
-//                 ))}
-//               </ul>
-//             ) : (
-//               <p className="text-sm text-gray-600 dark:text-white">
-//                 No payments found. Refund is not required.
-//               </p>
-//             )}
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Footer Buttons */}
-//       <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-//         <button
-//           className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
-//           onClick={onClose}
-//         >
-//           Close
-//         </button>
-//       </div>
-//     </div>
-
-//     {/* Refund Confirm Modal */}
-//     {showRefundConfirmModel && (
-//       <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50">
-//         <div className="bg-white dark:bg-gray-800 dark:text-white rounded-lg shadow-lg w-full max-w-md p-6">
-//           <div className="flex justify-between items-center mb-4">
-//             <h3 className="text-lg font-medium">Process Refund</h3>
-//             <button
-//               onClick={() => setShowRefundConfirmModel(false)}
-//               className="text-gray-500 dark:text-gray-200 hover:text-gray-700"
-//             >
-//               <X size={20} />
-//             </button>
-//           </div>
-
-//           <div className="mb-6">
-//             <p className="mb-4">
-//               Are you sure you want to process a refund for the following
-//               payment?
-//             </p>
-//             {payment && (
-//               <div className="bg-gray-50 p-4 rounded-lg">
-//                 <p>
-//                   <span className="font-medium">Payment Id:</span>{" "}
-//                   {selectedRefundPayment.order_id}
-//                 </p>
-//                 <p>
-//                   <span className="font-medium">Refund Amount :</span>{" "}
-//                   ₹{selectedRefundPayment.paid_amount}
-//                 </p>
-//               </div>
-//             )}
-//           </div>
-
-//           <div className="flex justify-end space-x-3">
-//             <button
-//               onClick={() => showRefundConfirmModel(false)}
-//               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               onClick={onConfirmRefund(selectedRefundPayment, selectedRefundPayment.paid_amount)}
-//               className="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-//               disabled={isLoading}
-//             >
-//               {isLoading ? (
-//                 <div className="flex items-center">
-//                   <RefreshCw size={16} className="animate-spin mr-2" />
-//                   Processing...
-//                 </div>
-//               ) : (
-//                 "Process Refund"
-//               )}
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     )}
-//   </div>
-// );
-
-// };
-
 export const RefundDialog = ({
   payment,
   onConfirmRefund,
@@ -1568,16 +1225,13 @@ export const RefundDialog = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden mx-4">
-        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             User Payments
           </h2>
         </div>
 
-        {/* Content */}
         <div className="px-6 py-4 overflow-y-auto max-h-[70vh] space-y-6">
-          {/* Project Info */}
           <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
             <div className="font-medium">Project ID:</div>
             <div>{payment.project_code}</div>
@@ -1607,7 +1261,6 @@ export const RefundDialog = ({
             <div>₹{Number(payment.paid_amount || 0).toFixed(2)}</div>
           </div>
 
-          {/* Refund Section */}
           {showProjectRefundModalOpen && (
             <div className="space-y-3">
               {refundPayments.length > 0 ? (
@@ -1647,7 +1300,6 @@ export const RefundDialog = ({
           )}
         </div>
 
-        {/* Footer Buttons */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
           <button
             className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
@@ -1658,7 +1310,6 @@ export const RefundDialog = ({
         </div>
       </div>
 
-      {/* Refund Confirm Modal */}
       {showRefundConfirmModel && selectedRefundPayment && (
         <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 dark:text-white rounded-lg shadow-lg w-full max-w-md p-6">
