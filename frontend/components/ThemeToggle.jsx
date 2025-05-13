@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -12,7 +12,7 @@ export default function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null; 
+  if (!mounted) return null;
 
   return (
     <button

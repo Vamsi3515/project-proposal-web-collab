@@ -6,35 +6,34 @@ export default function Terms({ onAccept, loading }) {
   const [agreed, setAgreed] = useState(false);
   const [signature, setSignature] = useState("");
   const [errors, setErrors] = useState({});
-  
+
   useEffect(() => {
-    // Reset errors when inputs change
     if (signature.trim().length > 0) {
-      setErrors(prev => ({ ...prev, signature: null }));
+      setErrors((prev) => ({ ...prev, signature: null }));
     }
     if (agreed) {
-      setErrors(prev => ({ ...prev, agreed: null }));
+      setErrors((prev) => ({ ...prev, agreed: null }));
     }
   }, [signature, agreed]);
 
   const canSubmit = agreed && signature.trim().length > 0 && !loading;
-  
+
   const handleAccept = () => {
     const newErrors = {};
-    
+
     if (!signature.trim()) {
       newErrors.signature = "Signature is required";
     }
-    
+
     if (!agreed) {
       newErrors.agreed = "You must agree to the terms";
     }
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     onAccept();
   };
 
@@ -43,24 +42,38 @@ export default function Terms({ onAccept, loading }) {
       <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
         Terms & Conditions
       </h2>
-      
+
       <div className="h-40 overflow-y-auto p-3 border border-gray-300 dark:border-gray-700 rounded mb-4">
         <p className="text-gray-700 dark:text-gray-200">
-          <strong>1. Project Timeline:</strong> Complete the project within the specified timeline. Extensions must be requested in writing at least 48 hours before the deadline.<br /><br />
-          
-          <strong>2. Intellectual Property:</strong> No plagiarism allowed. All submitted work must be original or properly credited with appropriate licenses.<br /><br />
-          
-          <strong>3. Documentation:</strong> Final project must include comprehensive documentation including setup instructions, architecture overview, and usage guidelines.<br /><br />
-          
-          <strong>4. Guidelines:</strong> Follow all provided guidelines for development standards, naming conventions, and project structure.<br /><br />
-          
-          <strong>5. Scope Changes:</strong> Any changes to project scope must be approved in writing before implementation.
+          <strong>1. Project Timeline:</strong> Complete the project within the
+          specified timeline. Extensions must be requested in writing at least
+          48 hours before the deadline.
+          <br />
+          <br />
+          <strong>2. Intellectual Property:</strong> No plagiarism allowed. All
+          submitted work must be original or properly credited with appropriate
+          licenses.
+          <br />
+          <br />
+          <strong>3. Documentation:</strong> Final project must include
+          comprehensive documentation including setup instructions, architecture
+          overview, and usage guidelines.
+          <br />
+          <br />
+          <strong>4. Guidelines:</strong> Follow all provided guidelines for
+          development standards, naming conventions, and project structure.
+          <br />
+          <br />
+          <strong>5. Scope Changes:</strong> Any changes to project scope must
+          be approved in writing before implementation.
         </p>
       </div>
 
-      {/* Signature */}
       <div className="mt-4 mb-4">
-        <label htmlFor="signature" className="block text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+        <label
+          htmlFor="signature"
+          className="block text-lg font-semibold mb-2 text-gray-900 dark:text-white"
+        >
           Student Signature
         </label>
         <input
@@ -69,7 +82,11 @@ export default function Terms({ onAccept, loading }) {
           placeholder="Type your signature..."
           value={signature}
           onChange={(e) => setSignature(e.target.value)}
-          className={`text-3xl font-[cursive] border-b-2 ${errors.signature ? 'border-red-500' : 'border-black dark:border-white'} bg-gray-100 dark:bg-gray-800 text-black dark:text-white w-full p-2 mb-1`}
+          className={`text-3xl font-[cursive] border-b-2 ${
+            errors.signature
+              ? "border-red-500"
+              : "border-black dark:border-white"
+          } bg-gray-100 dark:bg-gray-800 text-black dark:text-white w-full p-2 mb-1`}
           disabled={loading}
         />
         {errors.signature && (
@@ -77,7 +94,6 @@ export default function Terms({ onAccept, loading }) {
         )}
       </div>
 
-      {/* Agreement Checkbox */}
       <div className="flex items-start mb-4">
         <div className="flex items-center h-5">
           <input
@@ -85,7 +101,9 @@ export default function Terms({ onAccept, loading }) {
             id="agree"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className={`w-5 h-5 ${errors.agreed ? 'border-red-500' : ''} accent-blue-600 dark:accent-blue-400`}
+            className={`w-5 h-5 ${
+              errors.agreed ? "border-red-500" : ""
+            } accent-blue-600 dark:accent-blue-400`}
             disabled={loading}
           />
         </div>
@@ -99,7 +117,6 @@ export default function Terms({ onAccept, loading }) {
         </div>
       </div>
 
-      {/* Accept & Submit Button */}
       <button
         type="button"
         onClick={handleAccept}
@@ -120,7 +137,6 @@ export default function Terms({ onAccept, loading }) {
         )}
       </button>
 
-      {/* Spinner style */}
       <style jsx>{`
         .spinner {
           display: inline-block;
@@ -131,10 +147,14 @@ export default function Terms({ onAccept, loading }) {
           border-top-color: white;
           animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
     </div>

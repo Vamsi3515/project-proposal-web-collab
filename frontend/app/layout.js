@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeClientProvider from "@/app/theme-provider";
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
           <ToastContainer
             position="top-right"
             autoClose={3000}
-            limit={3} 
+            limit={3}
             hideProgressBar={false}
             newestOnTop
             closeOnClick

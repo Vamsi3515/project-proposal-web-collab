@@ -120,3 +120,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+#__next-build-watcher,
+[data-nextjs-dev-overlay],
+.nextjs-toast {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}

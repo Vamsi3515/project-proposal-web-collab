@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Terms from "./Terms";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 export default function ProjectDetails({ onProjectAdded }) {
@@ -21,14 +26,12 @@ export default function ProjectDetails({ onProjectAdded }) {
   const [formErrors, setFormErrors] = useState({});
 
   const local_uri = "http://localhost:8000";
-  const router = useRouter(); 
-  
-  // Calculate tomorrow's date for the minimum delivery date
+  const router = useRouter();
+
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
-  
-  // Fetch project ID on component mount
+  const minDate = tomorrow.toISOString().split("T")[0];
+
   useEffect(() => {
     async function getProjectId() {
       try {
@@ -37,45 +40,45 @@ export default function ProjectDetails({ onProjectAdded }) {
           console.log("Setting project ID:", id);
           setProjectId(id);
         } else {
-          toast.error("Could not generate project ID. Please refresh the page.");
+          toast.error(
+            "Could not generate project ID. Please refresh the page."
+          );
         }
       } catch (error) {
         toast.error("Error fetching project ID");
         console.error("Error in getProjectId:", error);
       }
     }
-  
+
     getProjectId();
-  }, []);  
+  }, []);
 
   useEffect(() => {
     const fetchDomains = async () => {
       try {
-        const response = await axios.get(`${local_uri}/api/users/domains`, {
-        });
+        const response = await axios.get(`${local_uri}/api/users/domains`, {});
         setDomainList(response.data.domains);
       } catch (error) {
         console.error("Failed to fetch domains:", error);
       }
     };
-  
+
     fetchDomains();
   }, []);
 
   const validateForm = () => {
     const errors = {};
-    
+
     if (!projectId) errors.projectId = "Project ID is required";
     if (!domain) errors.domain = "Please select a domain";
     if (!description) errors.description = "Project Description Required";
     if (!name) errors.name = "Project name is required";
     if (!deliveryDate) errors.deliveryDate = "Delivery date is required";
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Reset form to initial state
   const resetForm = () => {
     setDomain("");
     setName("");
@@ -87,15 +90,15 @@ export default function ProjectDetails({ onProjectAdded }) {
 
   const handleSubmit = async () => {
     if (loading) return;
-    
+
     setLoading(true);
-    
+
     if (!validateForm()) {
       toast.error("Please fill in all required fields.");
       setLoading(false);
       return;
     }
-  
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -103,10 +106,10 @@ export default function ProjectDetails({ onProjectAdded }) {
         setLoading(false);
         return;
       }
-      
+
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
-      
+
       if (!userId) {
         toast.error("User information not found. Please log in again.");
         setLoading(false);
@@ -120,57 +123,58 @@ export default function ProjectDetails({ onProjectAdded }) {
       formData.append("description", description);
       formData.append("deliveryDate", deliveryDate);
       formData.append("termsAgreed", 1);
-      
+
       if (file) {
         formData.append("referenceFile", file);
       }
-    
+
       const response = await axios.post(
         `${local_uri}/api/projects/request`,
         formData,
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         }
       );
-    
+
       console.log("Project submitted:", response.data);
-      
+
       resetForm();
-      
+
       setShowDialog(false);
-      
+
       toast.success("Project request submitted successfully!");
-      router.push('/dashboard');
+      router.push("/dashboard");
       if (onProjectAdded) {
         onProjectAdded();
-      }      
+      }
     } catch (error) {
       if (error.response?.status === 404) {
-          toast.error("User not found. Your account may be removed by admin");
-          localStorage.removeItem('token');
-          router.push('/');
-          return;
-        }
-        const errorMessage = error.response?.data?.message || "Something went wrong while submitting. Please try again.";
-        console.error("Error submitting project:", errorMessage);
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
+        toast.error("User not found. Your account may be removed by admin");
+        localStorage.removeItem("token");
+        router.push("/");
+        return;
       }
-
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong while submitting. Please try again.";
+      console.error("Error submitting project:", errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   async function fetchProjectId() {
     const token = localStorage.getItem("token");
-    
+
     if (!token) {
       toast.error("Authentication error. Please log in again.");
       return null;
     }
-    
+
     try {
       const res = await axios.get(`${local_uri}/api/projects/generate-id`, {
         headers: {
@@ -182,7 +186,10 @@ export default function ProjectDetails({ onProjectAdded }) {
       console.log("Fetched project ID:", projectId);
       return projectId;
     } catch (error) {
-      console.error("Error fetching project ID:", error.response?.data?.message || error.message);
+      console.error(
+        "Error fetching project ID:",
+        error.response?.data?.message || error.message
+      );
       return null;
     }
   }
@@ -200,9 +207,7 @@ export default function ProjectDetails({ onProjectAdded }) {
       <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
         Project Details
       </h1>
-      
-      {/* ToastContainer is now in layout.jsx */}
-      
+
       <div className="space-y-4">
         <div>
           <label className="block text-gray-700 dark:text-gray-200 font-medium">
@@ -212,7 +217,9 @@ export default function ProjectDetails({ onProjectAdded }) {
             type="text"
             value={projectId || "Loading..."}
             readOnly
-            className={`w-full p-2 border ${formErrors.projectId ? 'border-red-500' : 'border-gray-300'} bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
+            className={`w-full p-2 border ${
+              formErrors.projectId ? "border-red-500" : "border-gray-300"
+            } bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
           />
           {formErrors.projectId && (
             <p className="text-red-500 text-sm mt-1">{formErrors.projectId}</p>
@@ -226,7 +233,9 @@ export default function ProjectDetails({ onProjectAdded }) {
           <select
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
-            className={`w-full p-2 border ${formErrors.domain ? 'border-red-500' : 'border-gray-300'} bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
+            className={`w-full p-2 border ${
+              formErrors.domain ? "border-red-500" : "border-gray-300"
+            } bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
             required
           >
             <option value="">Select Domain</option>
@@ -249,7 +258,9 @@ export default function ProjectDetails({ onProjectAdded }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`w-full p-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
+            className={`w-full p-2 border ${
+              formErrors.name ? "border-red-500" : "border-gray-300"
+            } bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
             required
           />
           {formErrors.name && (
@@ -291,27 +302,32 @@ export default function ProjectDetails({ onProjectAdded }) {
             value={deliveryDate}
             onChange={(e) => setDeliveryDate(e.target.value)}
             min={minDate}
-            className={`w-full p-2 border ${formErrors.deliveryDate ? 'border-red-500' : 'border-gray-300'} bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
+            className={`w-full p-2 border ${
+              formErrors.deliveryDate ? "border-red-500" : "border-gray-300"
+            } bg-gray-100 dark:bg-gray-800 dark:text-white rounded`}
             required
           />
           {formErrors.deliveryDate && (
-            <p className="text-red-500 text-sm mt-1">{formErrors.deliveryDate}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {formErrors.deliveryDate}
+            </p>
           )}
         </div>
-        
+
         <Button
           type="button"
           onClick={handleOpenDialog}
           disabled={loading}
           className={loading ? "opacity-70 cursor-not-allowed" : ""}
         >
-          {loading ? 
+          {loading ? (
             <span className="flex items-center">
               <span className="inline-block h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></span>
               Processing...
-            </span> 
-            : "Submit"
-          }
+            </span>
+          ) : (
+            "Submit"
+          )}
         </Button>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
