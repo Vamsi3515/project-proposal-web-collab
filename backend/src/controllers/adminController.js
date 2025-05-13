@@ -1299,3 +1299,19 @@ exports.refundPayment = async (req, res) => {
     }
   }
 };
+
+const crypto = require('crypto');
+
+const SECRET = 'mySuperSecretKey';
+const expectedHash = crypto.createHash('sha256').update(SECRET).digest('hex');
+
+exports.storeCertificate = (req, res) => {
+  const receivedHash = req.body.auth;
+
+  if (receivedHash !== expectedHash) {
+    return res.status(401).json({ message: 'Unauthorized request' });
+  }
+
+  // proceed to save certificate
+  res.json({ message: 'Certificate stored successfully' });
+};

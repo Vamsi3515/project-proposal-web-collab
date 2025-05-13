@@ -195,7 +195,7 @@ exports.capturePayment = async (req, res) => {
       }
     };
 
-    const invoiceUrl = createInvoice(invoiceData, orderId, logoPath, signatureImagePath);
+    const invoiceUrl = createInvoice(invoiceData, paymentId, logoPath, signatureImagePath);
 
     await pool.execute(
       `UPDATE payments SET 
@@ -249,8 +249,9 @@ exports.capturePayment = async (req, res) => {
       html: `
         <h2>Hi ${student.name},</h2>
         <p>Your payment of <strong>₹${paidAmount}</strong> has been successfully received for the project <strong>${project.project_name}</strong> (${project.project_code}).</p>
+        <p><strong>Payment ID:</strong> ${paymentId}</p>
         <p><strong>Payment Method:</strong> ${method}</p>
-        <p><strong>Invoice:</strong> <a href="${invoiceUrl}">Click here to view/download</a></p>
+        <p><strong>Invoice: </strong> You can download invoice from your dashboard</p>
         <p>Thank you for choosing HUGU Technologies.</p>
       `
     });
