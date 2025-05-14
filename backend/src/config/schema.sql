@@ -127,64 +127,17 @@ CREATE TABLE refunds (
     FOREIGN KEY (payment_id) REFERENCES payments(payment_id) ON DELETE CASCADE
 );
 
--- ALTER TABLE students DROP INDEX roll_no;
--- ALTER TABLE students ADD UNIQUE (team_id, roll_no);
--- ALTER TABLE payments ADD COLUMN refund_status ENUM('pending', 'done') DEFAULT 'pending';
--- ALTER TABLE payments DROP COLUMN refund_status;
--- drop database project_proposal_web;
-
-USE project_proposal_web;
-
-show tables;
-
-select * from payments;
-delete from projects where project_id=1;
-
-update payments set paid_amount="4999" where project_id=10;
-update projects set project_status="rejected" where project_id=6;
-
-INSERT INTO payments (user_id, project_id, total_amount, paid_amount, pending_amount, payment_status, created_at)
-VALUES (1, 1, 5000.00, 2000.00, 3000.00, 'partially_paid', NOW());
-
-INSERT INTO payments (user_id, project_id, total_amount, paid_amount, payment_status, created_at)
-VALUES (1, 1, 5000.00, 2000.00, 'partially_paid', NOW());
-
-ALTER TABLE payments
-MODIFY payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
-
-ALTER TABLE payments ADD UNIQUE (project_id);
-delete from payments where project_id = 2;
-SELECT * FROM payments WHERE project_id = 5;
-
-ALTER TABLE reports
-ADD COLUMN report_note TEXT NULL AFTER pdf_url;
-
-ALTER TABLE payments
-ADD COLUMN order_id VARCHAR(255) NOT NULL;
-
-ALTER TABLE payments
-MODIFY COLUMN order_id VARCHAR(255) NULL;
-
-ALTER TABLE payments
-MODIFY COLUMN project_id INT NOT NULL UNIQUE;
-
-DROP TABLE PAYMENTS;
-
-ALTER TABLE projects
-ADD COLUMN total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0;
-
-ALTER TABLE payments 
-MODIFY COLUMN payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
-
-ALTER TABLE projects 
-ADD COLUMN payment_status ENUM('pending', 'partially_paid', 'paid', 'refunded') DEFAULT 'pending';
-
-ALTER TABLE payments 
-MODIFY COLUMN payment_status ENUM('pending', 'success', 'failed', 'refunded') DEFAULT 'pending';
-
-ALTER TABLE payments 
-ADD COLUMN refund_id VARCHAR(255),
-ADD COLUMN refund_amount DECIMAL(10, 2),
-ADD COLUMN refund_status VARCHAR(20);
-
-ALTER TABLE payments ADD COLUMN razorpay_payment_id VARCHAR(255);
+-- Certificate Table
+CREATE TABLE certificates (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100),
+  college VARCHAR(150),
+  role VARCHAR(100),
+  start_date DATE,
+  end_date DATE,
+  email VARCHAR(150),
+  certificate_id VARCHAR(100) UNIQUE,
+  issued_date DATE,
+  file_path VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

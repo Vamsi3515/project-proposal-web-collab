@@ -2,6 +2,7 @@ const pool = require("../config/db.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const crypto = require('crypto');
 
 const transporter = nodemailer.createTransport({
     service: "gmail",

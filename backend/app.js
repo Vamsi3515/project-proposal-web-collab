@@ -11,6 +11,7 @@ const paymentRoutes = require("./src/routes/paymentRoutes.js");
 const invoiceRoutes = require("./src/routes/invoiceRoutes.js");
 const reportRoutes = require("./src/routes/reportRoutes.js");
 const adminRoutes = require("./src/routes/adminRoutes.js");
+const certificateRoutes = require("./src/routes/certificateRoutes.js");
 
 const helmet = require("helmet");
 
@@ -38,6 +39,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/certificates", certificateRoutes);
 app.use((err, req, res, next) => {
     res.status(err.status || 500).json({ message: err.message || "Internal server error!" });
 });

@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/userController.js");
 const { validateOTP } = require("../middlewares/validateOTP.js");
 const authenticateUser = require("../middlewares/authMiddleware.js");
+const upload = require("../middlewares/multerConfig");
 
 router.post("/register",validateOTP, userController.verifyOtpAndRegister);
 router.post("/login", userController.loginUser);

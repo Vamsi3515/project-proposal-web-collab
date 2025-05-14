@@ -19,12 +19,16 @@ const storage = multer.diskStorage({
 
     let dir = "uploads/projects";
 
+    console.log("Hit multer");
+
     if (req.url.includes("/domains")) {
       dir = "uploads/domains";
     } else if (req.url.includes("/upload-solution")) {
       dir = "uploads/projects/solutions";
     } else if (fullUrl.includes("/reports")) {
       dir = "uploads/reports";
+    } else if (req.originalUrl.includes("/certificates")) {
+      dir = "uploads/certificates/view";
     }
 
     fs.mkdirSync(dir, { recursive: true }); 
