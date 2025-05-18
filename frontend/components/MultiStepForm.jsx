@@ -317,7 +317,7 @@ export default function MultiStepForm() {
                   >
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                        Student {index + 1}
+                        Student {index + 1} <span className="text-red-500">*</span>
                       </h3>
                       {index > 0 && (
                         <button
@@ -345,7 +345,7 @@ export default function MultiStepForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Name
+                          Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           {...register(`students.${index}.name`, {
@@ -353,6 +353,7 @@ export default function MultiStepForm() {
                           })}
                           placeholder="Full Name"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                          required
                         />
                         {errors.students?.[index]?.name && (
                           <p className="mt-1 text-sm text-red-600">
@@ -363,7 +364,7 @@ export default function MultiStepForm() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Roll No
+                          Roll No <span className="text-red-500">*</span>
                         </label>
                         <input
                           {...register(`students.${index}.rollNo`, {
@@ -371,6 +372,7 @@ export default function MultiStepForm() {
                           })}
                           placeholder="e.g. A12345"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                          required
                         />
                         {errors.students?.[index]?.rollNo && (
                           <p className="mt-1 text-sm text-red-600">
@@ -381,7 +383,7 @@ export default function MultiStepForm() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Branch
+                          Branch <span className="text-red-500">*</span>
                         </label>
                         <input
                           {...register(`students.${index}.branch`, {
@@ -389,6 +391,7 @@ export default function MultiStepForm() {
                           })}
                           placeholder="e.g. Computer Science"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                          required
                         />
                         {errors.students?.[index]?.branch && (
                           <p className="mt-1 text-sm text-red-600">
@@ -399,7 +402,7 @@ export default function MultiStepForm() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Email
+                          Email <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="email"
@@ -412,6 +415,7 @@ export default function MultiStepForm() {
                           })}
                           placeholder="email@example.com"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                          required
                         />
                         {errors.students?.[index]?.email && (
                           <p className="mt-1 text-sm text-red-600">
@@ -422,7 +426,7 @@ export default function MultiStepForm() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Phone
+                          Phone <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="tel"
@@ -436,6 +440,7 @@ export default function MultiStepForm() {
                           })}
                           placeholder="10-digit number"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                          required
                         />
                         {errors.students?.[index]?.phone && (
                           <p className="mt-1 text-sm text-red-600">
@@ -490,13 +495,13 @@ export default function MultiStepForm() {
           {step === 2 && (
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 min-h-64">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-                College Information
+                College Information <span className="text-red-500">*</span>
               </h2>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    College Name
+                    College Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     {...register("college.name", {
@@ -504,6 +509,7 @@ export default function MultiStepForm() {
                     })}
                     placeholder="e.g. University of Technology"
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                    required
                   />
                   {errors.college?.name && (
                     <p className="mt-1 text-sm text-red-600">
@@ -514,7 +520,7 @@ export default function MultiStepForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Branch
+                    Branch <span className="text-red-500">*</span>
                   </label>
                   <input
                     {...register("college.branch", {
@@ -522,6 +528,7 @@ export default function MultiStepForm() {
                     })}
                     placeholder="e.g. Main Campus"
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                    required
                   />
                   {errors.college?.branch && (
                     <p className="mt-1 text-sm text-red-600">
@@ -532,7 +539,7 @@ export default function MultiStepForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Primary Domain
+                    Primary Domain <span className="text-red-500">*</span>
                   </label>
                   <input
                     {...register("college.domain", {
@@ -540,6 +547,7 @@ export default function MultiStepForm() {
                     })}
                     placeholder="e.g. Engineering"
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                    required
                   />
                   {errors.college?.domain && (
                     <p className="mt-1 text-sm text-red-600">
@@ -554,18 +562,19 @@ export default function MultiStepForm() {
           {step === 3 && (
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 min-h-64">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-                Resource Selection
+                Resource Selection <span className="text-red-500">*</span>
               </h2>
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Select Study Material
+                  Select Study Material <span className="text-red-500">*</span>
                 </label>
 
                 <select
                   value={selectedDomain}
                   onChange={(e) => setSelectedDomain(e.target.value)}
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                  required
                 >
                   <option value="">-- Select a Domain --</option>
                   {domainList.map((d) => (
