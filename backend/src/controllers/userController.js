@@ -30,7 +30,7 @@ exports.sendOtpToEmail = async (req, res) => {
         console.log(`OTP for ${email}:`, otp);
 
         await transporter.sendMail({
-            from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+            from: `"HUGO Technologies" <${process.env.EMAIL_USER}>`,
             to: email,
             subject: "OTP Verification Code",
             text: `Your OTP is: ${otp}. It is valid for 5 minutes.`

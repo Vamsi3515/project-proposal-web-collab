@@ -29,7 +29,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
   const fileInputRef = useRef(null);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [invoices, setInvoices] = useState([]);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -542,8 +542,8 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
 
         {invoiceModalOpen && (
           <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">Invoices</h2>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4 dark:text-white">Invoices</h2>
               <ul className="space-y-3 max-h-80 overflow-y-auto">
                 {invoices.length > 0 ? (
                   invoices.map((inv) => (
@@ -552,7 +552,7 @@ export const ProjectViewModal = ({ project, onClose, onUpdate }) => {
                       className="flex justify-between items-center"
                     >
                       <div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-gray-700 dark:text-white">
                           ₹{inv.paid_amount} - {inv.payment_method} -{" "}
                           {new Date(inv.created_at).toLocaleDateString()}
                         </p>
@@ -913,7 +913,7 @@ export const ReportViewModal = ({ report, onClose, onReply }) => {
   const [reply, setReply] = useState("");
   const [files, setFiles] = useState([]);
   const [reports, setReports] = useState([]);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const handleReply = () => {
     if (!reply.trim()) {
@@ -1194,7 +1194,7 @@ export const RefundDialog = ({
   const [selectedRefundPayment, setSelectedRefundPayment] = useState(null);
   const [loadingRefundId, setLoadingRefundId] = useState(null);
 
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const fetchPaymentByProjectId = async (projectId) => {
     const token = localStorage.getItem("adminToken");

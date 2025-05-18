@@ -25,7 +25,7 @@ export default function ProjectDetails({ onProjectAdded }) {
   const [loading, setLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
   const router = useRouter();
 
   const tomorrow = new Date();
@@ -153,7 +153,7 @@ export default function ProjectDetails({ onProjectAdded }) {
     } catch (error) {
       if (error.response?.status === 404) {
         toast.error("User not found. Your account may be removed by admin");
-        localStorage.removeItem("token");
+        localStorage.clear();
         router.push("/");
         return;
       }

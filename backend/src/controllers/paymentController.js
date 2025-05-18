@@ -77,6 +77,16 @@ const razorpay = new Razorpay({
 exports.createPaymentOrder = async (req, res) => {
   try {
     const { amount, projectId } = req.body;
+    const userId = req.user?.id;
+
+    const [userRows] = await pool.execute(
+      "SELECT email FROM users WHERE user_id = ?",
+      [userId]
+    );      
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
 
     const [project] = await pool.execute("SELECT * FROM projects WHERE project_id = ?", [projectId]);
     if (!project.length) {
@@ -164,7 +174,7 @@ exports.capturePayment = async (req, res) => {
 
     const invoiceData = {
       bussinessInfo: {
-        name: 'HUGU TECHNOLOGIES',
+        name: 'HUGO Technologies',
         address1: '# 2nd Floor, Chenna Complex,Opp Mega Theatre',
         address2: 'Pillar No P-1542,Near Dilsukhnagar, Hyderabad',
         phone: '+91 8106803105, +91 6303063542',
@@ -238,7 +248,7 @@ exports.capturePayment = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      from: `"HUGO Technologies" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: `Payment Successful for Project: ${project.project_name}`,
       html: `
@@ -247,7 +257,7 @@ exports.capturePayment = async (req, res) => {
         <p><strong>Payment ID:</strong> ${paymentId}</p>
         <p><strong>Payment Method:</strong> ${method}</p>
         <p><strong>Invoice: </strong> You can download invoice from your dashboard</p>
-        <p>Thank you for choosing HUGU Technologies.</p>
+        <p>Thank you for choosing HUGO Technologies.</p>
       `
     });
 

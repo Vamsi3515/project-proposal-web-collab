@@ -58,7 +58,7 @@ exports.createProject = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      from: `"HUGO Technologies" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: "Your project has been submitted!",
       html: `
@@ -169,6 +169,18 @@ exports.updateDomain = async (req, res) => {
   const { domain } = req.body;
 
   try {
+
+    const userId = req.user?.id;
+
+    const [userRows] = await pool.execute(
+      "SELECT email FROM users WHERE user_id = ?",
+      [userId]
+    );      
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
     const [result] = await pool.execute(
       "UPDATE projects SET domain = ? WHERE project_id = ?",
       [domain, id]

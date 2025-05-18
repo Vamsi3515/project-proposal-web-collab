@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   const [endDate, setEndDate] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
 
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
   const router = useRouter();
 
   const handleSectionChange = (section) => {
@@ -594,7 +594,7 @@ const DashboardContent = ({
   const [domains, setDomains] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState("");
   const [existingFile, setExistingFile] = useState(null);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
   const [newDomain, setNewDomain] = useState("");
   const [newFile, setNewFile] = useState(null);
   const [editDomainId, setEditDomainId] = useState(null);
@@ -1064,7 +1064,7 @@ const ProjectsContent = ({
     return <LoadingState />;
   }
 
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const fetchProjects = async () => {
     try {
@@ -1463,7 +1463,7 @@ const ReportsContent = ({
     return <LoadingState />;
   }
 
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const fetchReports = async () => {
     try {
@@ -1681,7 +1681,7 @@ const PaymentsContent = ({
 }) => {
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const handleRefundClick = (payment) => {
     setSelectedPayment(payment);

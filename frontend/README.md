@@ -14,6 +14,8 @@ Create a .env.local file and add the bellow variables
 
 ```bash
 NEXT_PUBLIC_RAZORPAY_KEY_ID= YOUR_RAZORPAY_KEY_ID
+NEXT_PUBLIC_API_URL= YOUR_APP_URL
+NEXT_SERVER_API_URL= YOUR_SERVER_URL
 ```
 
 Third, run the development server:

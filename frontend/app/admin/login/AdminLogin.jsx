@@ -10,7 +10,7 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +27,11 @@ const AdminLogin = () => {
       });
 
       const data = await res.json();
+
+      if (res.status === 404) {
+        localStorage.removeItem('adminToken');
+        router.push('/');
+      }
 
       if (res.ok) {
         localStorage.setItem("adminToken", data.token);

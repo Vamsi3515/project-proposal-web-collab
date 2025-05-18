@@ -43,6 +43,15 @@ exports.createReport = async (req, res) => {
   const file = req.file?.filename;
   const fileUrl = file ? `/uploads/reports/${file}` : null;
 
+  const [userRows] = await pool.execute(
+    "SELECT email FROM users WHERE user_id = ?",
+    [userId]
+  );      
+
+  if (userRows.length === 0) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
   if (!title || !description || title.trim() === "" || description.trim() === "") {
     return res.status(400).json({
       success: false,
@@ -69,7 +78,11 @@ exports.createReport = async (req, res) => {
     const [userRows] = await pool.query(
       `SELECT email FROM users WHERE user_id = ?`,
       [userId]
-    );
+    );   
+    
+      if (userRows.length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
 
     if (userRows.length > 0) {
       const user = userRows[0];
@@ -83,7 +96,7 @@ exports.createReport = async (req, res) => {
       });
 
       await transporter.sendMail({
-        from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+        from: `"HUGO Technologies" <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: `Your report "${report.title}" has been submitted!`,
         html: `
@@ -106,6 +119,17 @@ exports.createReport = async (req, res) => {
 exports.updateReportStatus = async (req, res) => {
   const { reportId } = req.params;
   const { status } = req.body;
+
+  const userId = req.user?.id;
+
+  const [userRows] = await pool.execute(
+    "SELECT email FROM users WHERE user_id = ?",
+    [userId]
+  );      
+
+  if (userRows.length === 0) {
+    return res.status(404).json({ message: "User not found." });
+  }
 
   if (!["open", "closed"].includes(status)) {
     return res.status(400).json({ success: false, message: "Invalid status" });

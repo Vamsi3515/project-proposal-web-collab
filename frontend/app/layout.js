@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Create Next App",
+  title: "Hugo Technologies",
   description: "Created by Purna and Vamsi",
 };
 

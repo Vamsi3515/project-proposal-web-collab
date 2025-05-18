@@ -43,7 +43,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -132,7 +132,7 @@ function RegisterForm() {
   const [otpTimer, setOtpTimer] = useState(0);
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
 
   useEffect(() => {
     let interval;

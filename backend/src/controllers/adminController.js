@@ -864,8 +864,6 @@ exports.refundPayment = async (req, res) => {
     const [[user]] = await pool.execute(`SELECT email FROM users WHERE user_id = ?`, [paymentRecord.user_id]);
     const [[student]] = await pool.execute(`SELECT name FROM students WHERE user_id = ?`, [paymentRecord.user_id]);
     const [[project]] = await pool.execute(`SELECT project_name, project_code FROM projects WHERE project_id = ?`, [paymentRecord.project_id]);
-
-    console.log("Order Id :", paymentRecord.razorpay_payment_id);
     
     const refund = await razorpay.payments.refund(paymentRecord.razorpay_payment_id, {
       amount: amount ? Math.round(amount * 100) : undefined // Amount in paise
@@ -892,8 +890,6 @@ exports.refundPayment = async (req, res) => {
       [paymentRecord.project_id]
     );
     const totalPaid = totalPaidRows[0].total_paid || 0;
-
-    console.log("Debug Line 10");
     
     const [[projectTotal]] = await pool.execute(
       `SELECT total_amount FROM projects WHERE project_id = ?`,
@@ -908,14 +904,10 @@ exports.refundPayment = async (req, res) => {
       newStatus = 'partially_paid';
     }
 
-    console.log("Debug Line 11");
-
     await pool.execute(
       `UPDATE projects SET payment_status = ? WHERE project_id = ?`,
       [newStatus, paymentRecord.project_id]
     );
-
-    console.log("Debug Line 12");
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -926,7 +918,7 @@ exports.refundPayment = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
+      from: `"HUGO Technologies" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: `Refund Issued for Project: ${project.project_name}`,
       html: `

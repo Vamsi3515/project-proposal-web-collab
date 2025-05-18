@@ -9,7 +9,7 @@ export default function MultiStepForm() {
   const [step, setStep] = useState(1);
   const [selectedDomain, setSelectedDomain] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const local_uri = "http://localhost:8000";
+  const local_uri = process.env.NEXT_PUBLIC_SERVER_API_URL;
   const [isLoading, setIsLoading] = useState(true);
   const [transitionDirection, setTransitionDirection] = useState(null);
   const [domainList, setDomainList] = useState([]);
