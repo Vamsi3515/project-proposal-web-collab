@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 
+//verify admin
 const authorizeAdmin = async (req, res, next) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });

@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 
+//generate project id
 const generateProjectCode = async () => {
     const now = new Date();
     const year = now.getFullYear();

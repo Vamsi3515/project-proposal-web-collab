@@ -1,5 +1,6 @@
 const { body, validationResult } = require("express-validator");
 
+//validate project data
 const validateProjectData = [
     body("projectName").not().isEmpty().withMessage("Project name is required"),
     body("domain").not().isEmpty().withMessage("Domain is required"),

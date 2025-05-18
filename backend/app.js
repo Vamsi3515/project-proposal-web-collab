@@ -44,7 +44,7 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({ message: err.message || "Internal server error!" });
 });
 app.get("/", (req, res) => {
-    res.send("Welcome to the Project Request Platform!");
+    res.send("Welcome to the Hugo Technologies!");
 });
 app.get('/download/*', (req, res) => {
     const relativePath = req.params[0];

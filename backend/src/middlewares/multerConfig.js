@@ -2,12 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// const reportsDir = path.join(__dirname, "uploads", "reports");
-
-// if (!fs.existsSync(reportsDir)) {
-//   fs.mkdirSync(reportsDir, { recursive: true });
-// }
-
+//multer configuration for storing files
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("Multer Hit");

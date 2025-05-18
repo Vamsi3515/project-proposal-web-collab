@@ -399,8 +399,7 @@ const { randomInt } = require('crypto');
 
 dejavuFontPath = path.join(__dirname, '..', '..', 'assets/fonts', 'DejaVuSans.ttf');
 
-
-
+//create new invoice
 function createInvoice(invoice, invoiceNumber, logo, signature) {
     let doc = new PDFDocument({
         size: "A4",
@@ -429,6 +428,7 @@ function createInvoice(invoice, invoiceNumber, logo, signature) {
     return `/uploads/invoices/${invoiceFileName}`;
 }
 
+//generate invoice header
 function generateHeader(doc, logo, invoice) {
     const logoWidth = 200;
     const logoX = 20;
@@ -461,6 +461,7 @@ function generateHeader(doc, logo, invoice) {
     generateHr(doc, 110);
 }
 
+//generate customer information
 function generateCustomerInformation(doc, invoice, orderId) {
     const customerInfoTop = 125;
     const labelX = 80;
@@ -495,6 +496,7 @@ function generateCustomerInformation(doc, invoice, orderId) {
     generateHr(doc, customerInfoTop + 80);
 }
 
+//generate billing table
 function generateInvoiceTable(doc, invoice) {
     const invoiceTableTop = 210;
     const columnWidths = [180, 100, 70];
@@ -540,6 +542,7 @@ function generateInvoiceTable(doc, invoice) {
         .text(formatCurrency(invoice.paymentInfo.dueAmount), summaryX - 80, summaryY + 30);
 }
 
+//generate invoice footer
 function generateFooter(doc, signature) {
     const footerY = 750;
 
@@ -599,6 +602,7 @@ function formatDeliveryDate(dateString) {
 
 module.exports = { createInvoice };
 
+//testing formate
 // // Example usage with your invoice data structure
 // const invoiceData = {
 //     bussinessInfo: {

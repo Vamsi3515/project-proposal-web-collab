@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const nodemailer = require('nodemailer');
 
+//fetch all reports
 exports.getAllReports = async (req, res) => {
   try {
     const [reports] = await pool.query(`
@@ -16,6 +17,7 @@ exports.getAllReports = async (req, res) => {
   }
 };
 
+//fetch user reports
 exports.getUserReports = async (req, res) => {
     try {
       const userId = req.user.id;
@@ -33,7 +35,7 @@ exports.getUserReports = async (req, res) => {
     }
   };
   
-
+//create new report
 exports.createReport = async (req, res) => {
   const { title, description } = req.body;
   const userId = req.user.id;
@@ -100,7 +102,7 @@ exports.createReport = async (req, res) => {
   }
 };
 
-
+//update report status
 exports.updateReportStatus = async (req, res) => {
   const { reportId } = req.params;
   const { status } = req.body;
@@ -118,6 +120,7 @@ exports.updateReportStatus = async (req, res) => {
   }
 };
 
+//check whether user has any report
 exports.checkUserReports = async (req, res) => {
   const userId = req.user.id;
 

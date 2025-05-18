@@ -1,5 +1,6 @@
 const { body, validationResult } = require("express-validator");
 
+//validate otp digits
 const validateOTP = [
     body("email").isEmail().withMessage("Valid email is required"),
     body("otp").isLength({ min: 6, max: 6 }).withMessage("OTP must be 6 digits"),

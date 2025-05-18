@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require('crypto');
 
+//initialize nodemailer
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -14,6 +15,7 @@ const transporter = nodemailer.createTransport({
 
 const otpMap = new Map();
 
+//send otp to email
 exports.sendOtpToEmail = async (req, res) => {
     try {
         const { email } = req.body;
@@ -40,6 +42,7 @@ exports.sendOtpToEmail = async (req, res) => {
     }
 };
 
+//verifying otp and create account
 exports.verifyOtpAndRegister = async (req, res) => {
     try {
         const { email, password, otp } = req.body;
@@ -165,6 +168,7 @@ exports.loginUser = async (req, res) => {
     }
   };  
 
+//multistep user form submit
 exports.submitMultistepData = async (req, res) => {
     try {
       const { students, college, domain } = req.body;
@@ -215,6 +219,7 @@ exports.submitMultistepData = async (req, res) => {
     }
   };
 
+  //fetch all domains
 exports.getAllDomains = async (req, res) => {
   try {
     const [rows] = await pool.execute(`SELECT domain_id, domain_name, pdf_url FROM domains`);

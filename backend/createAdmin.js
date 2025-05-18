@@ -14,12 +14,12 @@ db.getConnection()
 const bcrypt = require('bcrypt');
 
 const createAdmin = async () => {
-    const hashedPassword = await bcrypt.hash('vsvk.v', 10);
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASS, 10);
 
     try {
         const [rows] = await db.execute(
             'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
-            ['vsaivamsikrishna.vadlamani@gmail.com', hashedPassword, 'admin']
+            [process.env.ADMIN_USER, hashedPassword, 'admin']
         );
         console.log('Admin created successfully');
     } catch (error) {

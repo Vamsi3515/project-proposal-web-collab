@@ -7,6 +7,7 @@ const fs = require("fs");
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
+//adminLogin
 exports.loginAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -41,6 +42,7 @@ exports.loginAdmin = async (req, res) => {
     }
 };
 
+//fetch all projects
 exports.getAllProjects = async (req, res) => {
   try {
     const [projects] = await pool.execute(`
@@ -83,7 +85,7 @@ exports.getAllProjects = async (req, res) => {
   }
 };
 
-
+//update project
 exports.updateProjectStatus = async (req, res) => {
     const { id } = req.params;
     const { status, notes } = req.body;
@@ -115,6 +117,7 @@ exports.setProjectPrice = async (req, res) => {
     }
 };
 
+//fetch reports
 exports.getAllReports = async (req, res) => {
     try {
         const [reports] = await pool.execute("SELECT * FROM reports");
@@ -124,6 +127,7 @@ exports.getAllReports = async (req, res) => {
     }
 };
 
+//fetch payments
 exports.getAllPayments = async (req, res) => {
   try {
     const [payments] = await pool.execute(`
@@ -172,119 +176,7 @@ exports.getAllPayments = async (req, res) => {
   }
 };
 
-  // exports.approveProject = async (req, res) => {
-  //   const { projectId, price } = req.body;
-
-  //   if (!projectId || !price) {
-  //   return res.status(400).json({ message: "projectId and totalAmount are required." });
-  //   }
-
-  //   try {
-  //     const [[project]] = await pool.execute(
-  //       `SELECT p.project_name, u.email, p.user_id
-  //        FROM projects p
-  //        JOIN users u ON p.user_id = u.user_id
-  //        WHERE p.project_id = ?`,
-  //       [projectId]
-  //     );
-  
-  //     if (!project) {
-  //       return res.status(404).json({ message: "Project not found" });
-  //     }
-  
-  //     await pool.execute(
-  //       `UPDATE projects SET project_status = 'approved' WHERE project_id = ?`,
-  //       [projectId]
-  //     );
-  
-  //     await pool.execute(
-  //       `INSERT INTO payments (project_id, user_id, total_amount, paid_amount, payment_status)
-  //        VALUES (?, ?, ?, 0, 'pending')
-  //        ON DUPLICATE KEY UPDATE total_amount = ?, payment_status = 'pending'`,
-  //       [projectId, project.user_id, price, price]
-  //     );         
-  
-  //     const transporter = nodemailer.createTransport({
-  //       service: "gmail",
-  //       auth: {
-  //         user: process.env.EMAIL_USER,
-  //         pass: process.env.EMAIL_PASS,
-  //       },
-  //     });
-  
-  //     await transporter.sendMail({
-  //       from: `"Project Portal" <${process.env.EMAIL_USER}>`,
-  //       to: project.email,
-  //       subject: "Your project has been approved!",
-  //       html: `
-  //         <h2>Hi,</h2>
-  //         <p>Your project <strong>${project.project_name}</strong> has been approved!</p>
-  //         <p>The total cost for your project is <strong>₹${price}</strong>.</p>
-  //         <p>Please make the payment to begin the development.</p>
-  //         <p>Thank you!</p>
-  //       `,
-  //     });
-  
-  //     res.status(200).json({ message: "Project approved and email sent." });
-  //   } catch (error) {
-  //     console.error("Approve Project Error:", error);
-  //     res.status(500).json({ message: "Internal server error" });
-  //   }
-  // };  
-
-  // exports.rejectProject = async (req, res) => {
-  //   const { projectId, reason } = req.body;
-  
-  //   if (!projectId || !reason) {
-  //     return res.status(400).json({ message: "projectId and reason are required." });
-  //   }
-  
-  //   try {
-  //     const [[project]] = await pool.execute(
-  //       `SELECT p.project_name, u.email 
-  //        FROM projects p 
-  //        JOIN users u ON p.user_id = u.user_id 
-  //        WHERE p.project_id = ?`,
-  //       [projectId]
-  //     );
-  
-  //     if (!project) {
-  //       return res.status(404).json({ message: "Project not found" });
-  //     }
-  
-  //     await pool.execute(
-  //       `UPDATE projects SET project_status = 'rejected', admin_notes = ? WHERE project_id = ?`,
-  //       [reason, projectId]
-  //     );
-  
-  //     const transporter = nodemailer.createTransport({
-  //       service: "gmail",
-  //       auth: {
-  //         user: process.env.EMAIL_USER,
-  //         pass: process.env.EMAIL_PASS,
-  //       },
-  //     });
-  
-  //     await transporter.sendMail({
-  //       from: `"Project Portal" <${process.env.EMAIL_USER}>`,
-  //       to: project.email,
-  //       subject: "Your project has been rejected",
-  //       html: `
-  //         <h2>Hi,</h2>
-  //         <p>Your project <strong>${project.project_name}</strong> has been rejected.</p>
-  //         <p><strong>Reason:</strong> ${reason}</p>
-  //         <p>You can contact us for further clarification or submit a new request.</p>
-  //       `,
-  //     });
-  
-  //     res.status(200).json({ message: "Project rejected and email sent." });
-  
-  //   } catch (error) {
-  //     console.error("Reject Project Error:", error);
-  //     res.status(500).json({ message: "Internal server error" });
-  //   }
-  // };  
-
+//approve project
 exports.approveProject = async (req, res) => {
   const { projectId, price } = req.body;
 
@@ -347,6 +239,7 @@ exports.approveProject = async (req, res) => {
   }
 };
 
+//reject project
 exports.rejectProject = async (req, res) => {
   const { projectId, reason } = req.body;
 
@@ -402,47 +295,7 @@ exports.rejectProject = async (req, res) => {
   }
 };
 
-
-  // exports.closeReport = async (req, res) => {
-  //   const { reportId } = req.params;
-  
-  //   try {
-      
-  //     const [result] = await pool.execute(
-  //       `UPDATE reports SET report_status = 'closed' WHERE report_id = ?`,
-  //       [reportId]
-  //     );
-  
-  //     if (result.affectedRows === 0) {
-  //       return res.status(404).json({ message: "Report not found" });
-  //     }
-
-  //     const transporter = nodemailer.createTransport({
-  //     service: "gmail",
-  //     auth: {
-  //       user: process.env.EMAIL_USER,
-  //       pass: process.env.EMAIL_PASS,
-  //     },
-  //   });
-
-  //   await transporter.sendMail({
-  //     from: `"Project Portal" <${process.env.EMAIL_USER}>`,
-  //     to: user.email,
-  //     subject: ` "${report.title}" has been closed!`,
-  //     html: `
-  //       <h2>Hi,</h2>
-  //       <p>Your report <strong>${report.title}</strong> has been closed!</p>
-  //       <p>Thank you!</p>
-  //     `,
-  //   });
-  
-  //     res.status(200).json({ message: "Report closed successfully." });
-  //   } catch (error) {
-  //     console.error("Close Report Error:", error);
-  //     res.status(500).json({ message: "Internal server error" });
-  //   }
-  // };
-
+//close report
 exports.closeReport = async (req, res) => {
   const { reportId } = req.params;
 
@@ -503,7 +356,8 @@ exports.closeReport = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-  
+
+//delete reports
   exports.deleteReport = async (req, res) => {
     const { reportId } = req.params;
   
@@ -524,70 +378,7 @@ exports.closeReport = async (req, res) => {
     }
   };
 
-  // exports.deleteProject = async (req, res) => {
-  //   const { projectId } = req.params;
-  
-  //   if (!projectId) {
-  //     return res.status(400).json({ message: "Project ID is required." });
-  //   }
-  
-  //   try {
-  //     const [rows] = await pool.execute(
-  //       `SELECT p.project_id, p.user_id, p.project_name, u.email, pay.payment_status
-  //        FROM projects p
-  //        JOIN users u ON p.user_id = u.user_id
-  //        LEFT JOIN payments pay ON pay.project_id = p.project_id
-  //        WHERE p.project_id = ?`,
-  //       [projectId]
-  //     );
-      
-  //     const projectDetails = rows[0];
-
-  //     const { payment_status, user_id, project_name, email } = projectDetails;
-
-  //     if (!projectDetails) {
-  //       return res.status(404).json({ message: "Project not found." });
-  //     }
-      
-  //     console.log("Payment status :", payment_status);
-
-  //     if (payment_status !== 'pending' && payment_status !== 'refunded' && payment_status !== null) {
-  //       return res.status(403).json({
-  //         message: "Cannot delete project. Payment already processed.",
-  //       });
-  //     }      
-  
-  //     await pool.execute(`DELETE FROM users WHERE user_id = ?`, [user_id]);
-  
-  //     const transporter = nodemailer.createTransport({
-  //       service: "gmail",
-  //       auth: {
-  //         user: process.env.EMAIL_USER,
-  //         pass: process.env.EMAIL_PASS,
-  //       },
-  //     });
-  
-  //     await transporter.sendMail({
-  //       from: `"Project Portal" <${process.env.EMAIL_USER}>`,
-  //       to: email,
-  //       subject: "Your project has been removed",
-  //       html: `
-  //         <h2>Hi,</h2>
-  //         <p>Your project <strong>${project_name}</strong> has been removed by the admin.</p>
-  //         <p>Reason: The project was not processed due to payment status (<strong>${payment_status}</strong>).</p>
-  //         <p>All your project and team details are also deleted from our system.</p>
-  //         <p>Feel free to submit a new request anytime.</p>
-  //       `,
-  //     });
-  
-  //     return res.status(200).json({ message: "Project and associated user data deleted successfully." });
-  
-  //   } catch (error) {
-  //     console.error("Delete Project Error:", error);
-  //     return res.status(500).json({ message: "Internal server error." });
-  //   }
-  // };
-
+//delete project including users
   exports.deleteProject = async (req, res) => {
   const { projectId } = req.params;
 
@@ -669,6 +460,7 @@ exports.closeReport = async (req, res) => {
   }
 };
 
+//add domains
 exports.addDomain = async (req, res) => {
   const { domainName } = req.body;
   const file = req.file;
@@ -693,6 +485,7 @@ exports.addDomain = async (req, res) => {
   }
 };
 
+//fetch domains
 exports.getAllDomains = async (req, res) => {
   try {
     const [rows] = await pool.execute(`SELECT domain_id, domain_name, pdf_url FROM domains`);
@@ -703,6 +496,7 @@ exports.getAllDomains = async (req, res) => {
   }
 };
 
+//delete domain
 exports.deleteDomain = async (req, res) => {
   const { id } = req.params;
 
@@ -721,6 +515,7 @@ exports.deleteDomain = async (req, res) => {
   }
 };
 
+//update domain
 exports.updateDomain = async (req, res) => {
   const domainId = req.params.id;
   const { domainName } = req.body;
@@ -743,37 +538,7 @@ exports.updateDomain = async (req, res) => {
   }
 };
 
-// exports.uploadProjectSolution = async (req, res) => {
-//   try {
-//     const { projectCode } = req.body;
-//     const renamedPaths = [];
-
-//     for (const file of req.files) {
-//       const ext = path.extname(file.originalname);
-//       const newFileName = `${projectCode}-${Date.now()}${ext}`;
-//       const newPath = path.join("uploads/projects/solutions", newFileName);
-
-//       fs.renameSync(file.path, newPath);
-//       renamedPaths.push(newPath);
-//     }
-
-//     if (renamedPaths.length > 0) {
-//       await pool.execute(
-//         "UPDATE projects SET project_file_url = ? WHERE project_code = ?",
-//         [renamedPaths[0], projectCode]
-//       );
-//     }
-
-//     res.status(200).json({
-//       message: "Files uploaded successfully",
-//       files: renamedPaths,
-//     });
-//   } catch (err) {
-//     console.error("Upload Error:", err);
-//     res.status(500).json({ message: "Upload failed", error: err.message });
-//   }
-// };
-
+//upload project solution
 exports.uploadProjectSolution = async (req, res) => {
   try {
     const { projectCode } = req.body;
@@ -839,6 +604,7 @@ exports.uploadProjectSolution = async (req, res) => {
   }
 };
 
+//add note to project
 exports.addProjectNote = async (req, res) => {
   try {
     const { projectCode, note } = req.body;
@@ -893,6 +659,7 @@ exports.addProjectNote = async (req, res) => {
   }
 };
 
+//get payment invoices
 exports.getInvoice = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -924,6 +691,7 @@ exports.getInvoice = async (req, res) => {
   }
 };
 
+//update project details
 exports.updateProjectDetails = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -947,7 +715,7 @@ exports.updateProjectDetails = async (req, res) => {
   }
 };
 
-
+//update report note
 exports.updateReportNote = async (req, res) => {
   const { reportId } = req.params;
   const { note } = req.body;
@@ -1007,7 +775,7 @@ exports.updateReportNote = async (req, res) => {
   }
 };
 
-
+//fetch project invoices
 exports.getProjectInvoices = async (req, res) => {
   try {
     const projectId = req.params.projectId;
@@ -1056,119 +824,13 @@ exports.getPaymentsByProjectId = async (req, res) => {
   }
 };
 
-// exports.refundPayment = async (req, res) => {
-//   try {
-//     const { amount } = req.body;
-//     const paymentId = req.params.paymentId;
-
-//     if (!paymentId) {
-//       return res.status(400).json({ error: "Payment ID is required" });
-//     }
-
-//     const [paymentRows] = await pool.execute(
-//       `SELECT * FROM payments WHERE payment_id = ? AND payment_status = 'success'`,
-//       [paymentId]
-//     );
-
-//     if (!paymentRows.length) {
-//       return res.status(404).json({ success: false, message: "Payment not found" });
-//     }
-
-//     const paymentRecord = paymentRows[0];
-
-//     const [user] = await pool.execute(`SELECT email FROM users WHERE user_id = ?`, [paymentRecord.user_id]);
-//     const [student] = await pool.execute(`SELECT name FROM students WHERE user_id = ?`, [paymentRecord.user_id]);
-//     const [project] = await pool.execute(`SELECT project_name, project_code FROM projects WHERE project_id = ?`, [paymentRecord.project_id]);
-
-//     const refund = await razorpay.payments.refund(paymentRecord.razorpay_payment_id || paymentId, {
-//       amount: amount ? amount * 100 : undefined
-//     });
-
-//     const refundAmount = refund.amount / 100;
-//     const refundStatus = refund.status;
-
-//     await pool.execute(
-//       `UPDATE payments 
-//        SET refund_id = ?, 
-//            refund_amount = ?, 
-//            refund_status = ?, 
-//            payment_status = 'refunded', 
-//            updated_at = CURRENT_TIMESTAMP
-//        WHERE payment_id = ?`,
-//       [refund.id, refundAmount, refundStatus, paymentId]
-//     );
-
-//     const [totalPaidRows] = await pool.execute(
-//       `SELECT SUM(paid_amount - IFNULL(refund_amount, 0)) AS total_paid 
-//        FROM payments 
-//        WHERE project_id = ? AND payment_status IN ('success', 'refunded')`,
-//       [paymentRecord.project_id]
-//     );
-//     const totalPaid = totalPaidRows[0].total_paid || 0;
-
-//     const [projectTotal] = await pool.execute(
-//       `SELECT total_amount FROM projects WHERE project_id = ?`,
-//       [paymentRecord.project_id]
-//     );
-//     const totalAmount = projectTotal[0].total_amount;
-
-//     let newStatus = 'pending';
-//     if (totalPaid >= totalAmount) {
-//       newStatus = 'paid';
-//     } else if (totalPaid > 0) {
-//       newStatus = 'partially_paid';
-//     }
-
-//     await pool.execute(
-//       `UPDATE projects SET payment_status = ? WHERE project_id = ?`,
-//       [newStatus, paymentRecord.project_id]
-//     );
-
-//     const transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS,
-//       },
-//     });
-
-//     await transporter.sendMail({
-//       from: `"HUGU Technologies" <${process.env.EMAIL_USER}>`,
-//       to: user[0].email,
-//       subject: `Refund Issued for Project: ${project[0].project_name}`,
-//       html: `
-//         <h2>Hi ${student[0].name},</h2>
-//         <p>We have processed your refund of <strong>₹${refundAmount}</strong> for project <strong>${project[0].project_name}</strong> (${project[0].project_code}).</p>
-//         <p><strong>Refund ID:</strong> ${refund.id}</p>
-//         <p><strong>Status:</strong> ${refundStatus}</p>
-//         <p>If you have any concerns, feel free to reach out to us.</p>
-//         <p>Thank you,<br>Team HUGU Technologies</p>
-//       `
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Refund processed successfully",
-//       refundId: refund.id,
-//       refundAmount,
-//       refundStatus,
-//       projectPaymentStatus: newStatus
-//     });
-
-//   } catch (error) {
-//     console.error("Refund Error:", error);
-//     if (!res.headersSent) {
-//       res.status(500).json({ success: false, message: error.message });
-//     }
-//   }
-// };
-
 // Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
+//manage refund
 exports.refundPayment = async (req, res) => {
   try {
     const { amount } = req.body;
@@ -1178,7 +840,6 @@ exports.refundPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Payment ID is required" });
     }
 
-    // Fetch payment record without status restriction
     const [paymentRows] = await pool.execute(
       `SELECT * FROM payments WHERE payment_id = ?`,
       [paymentId]
@@ -1196,19 +857,16 @@ exports.refundPayment = async (req, res) => {
     }
         
 
-    // Optional: check for zero or negative amount
     if (amount !== undefined && (isNaN(amount) || Number(amount) <= 0)) {
       return res.status(400).json({ success: false, message: "Refund amount must be greater than zero" });
     }
 
-    // Get user, student, and project info
     const [[user]] = await pool.execute(`SELECT email FROM users WHERE user_id = ?`, [paymentRecord.user_id]);
     const [[student]] = await pool.execute(`SELECT name FROM students WHERE user_id = ?`, [paymentRecord.user_id]);
     const [[project]] = await pool.execute(`SELECT project_name, project_code FROM projects WHERE project_id = ?`, [paymentRecord.project_id]);
 
     console.log("Order Id :", paymentRecord.razorpay_payment_id);
     
-    // Refund via Razorpay
     const refund = await razorpay.payments.refund(paymentRecord.razorpay_payment_id, {
       amount: amount ? Math.round(amount * 100) : undefined // Amount in paise
     });
@@ -1216,7 +874,6 @@ exports.refundPayment = async (req, res) => {
     const refundAmount = refund.amount / 100;
     const refundStatus = refund.status;
 
-    // Update payment row
     await pool.execute(
       `UPDATE payments 
        SET refund_id = ?, 
@@ -1228,7 +885,6 @@ exports.refundPayment = async (req, res) => {
       [refund.id, refundAmount, refundStatus, paymentId]
     );
 
-    // Recalculate project payment status
     const [totalPaidRows] = await pool.execute(
       `SELECT SUM(paid_amount - IFNULL(refund_amount, 0)) AS total_paid 
        FROM payments 
@@ -1261,7 +917,6 @@ exports.refundPayment = async (req, res) => {
 
     console.log("Debug Line 12");
 
-    // Send email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {

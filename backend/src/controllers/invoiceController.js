@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 
+//upload payment invoice
 exports.uploadInvoice = async (req, res) => {
     try {
         const { projectId, invoiceUrl } = req.body;
@@ -15,6 +16,7 @@ exports.uploadInvoice = async (req, res) => {
     }
 };
 
+//fetch invoices by id
 exports.getInvoiceById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -31,6 +33,7 @@ exports.getInvoiceById = async (req, res) => {
     }
 };
 
+//fetch all invoices
 exports.getAllInvoices = async (req, res) => {
     try {
         const [invoices] = await pool.execute("SELECT * FROM invoices ORDER BY created_at DESC");

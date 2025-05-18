@@ -5,6 +5,7 @@ const path = require("path");
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
+//create new project
 exports.createProject = async (req, res) => {
   try {
     const { userId, projectName, domain, description, deliveryDate, termsAgreed } = req.body;
@@ -86,6 +87,7 @@ exports.createProject = async (req, res) => {
   }
 };
 
+//fetch all projects
 exports.getAllProjects = async (req, res) => {
     try {
         const [projects] = await pool.execute("SELECT * FROM projects");
@@ -95,6 +97,7 @@ exports.getAllProjects = async (req, res) => {
     }
 };
 
+//fetch projects by id
 exports.getProjectById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -110,6 +113,7 @@ exports.getProjectById = async (req, res) => {
     }
 };
 
+//update project
 exports.updateProject = async (req, res) => {
     try {
         const { id } = req.params;
@@ -130,6 +134,7 @@ exports.updateProject = async (req, res) => {
     }
 };
 
+//delete project
 exports.deleteProject = async (req, res) => {
     try {
         const { id } = req.params;
@@ -146,6 +151,7 @@ exports.deleteProject = async (req, res) => {
     }
 };
 
+//fetch project by id
 exports.getProjectId = async (req, res) => {
     try {
         console.log("getProjectId route hit");
@@ -157,6 +163,7 @@ exports.getProjectId = async (req, res) => {
     }
 };
 
+//update project domain
 exports.updateDomain = async (req, res) => {
   const { id } = req.params;
   const { domain } = req.body;
@@ -177,6 +184,7 @@ exports.updateDomain = async (req, res) => {
   }
 };
 
+//fetch user projects
 exports.getProjectsByUser = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -209,6 +217,7 @@ exports.getProjectsByUser = async (req, res) => {
   }
 };
 
+//update project status
 exports.updateProjectStatus = async (req, res) => {
   try {
     const { projectId, status, notes } = req.body;
@@ -228,6 +237,7 @@ exports.updateProjectStatus = async (req, res) => {
   }
 };
 
+//generate invoice
 exports.generateInvoice = (req, res) => {
   const { projectId, userId, totalAmount } = req.body;
 

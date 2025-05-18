@@ -5,8 +5,10 @@ const path = require('path');
 const pool = require("../config/db");
 const nodemailer = require("nodemailer");
 
+//create invoice for payment
 const { createInvoice } = require('../utils/invoiceGenerator.js');
 
+//fetch pending payments
 exports.getPendingPayments = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -39,6 +41,7 @@ exports.getPendingPayments = async (req, res) => {
   }
 };
 
+//fetch payment history
 exports.getPaymentHistory = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -70,6 +73,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
+//create payment order
 exports.createPaymentOrder = async (req, res) => {
   try {
     const { amount, projectId } = req.body;
@@ -107,11 +111,11 @@ exports.createPaymentOrder = async (req, res) => {
   }
 };
 
+//capture razorpay payment
 exports.capturePayment = async (req, res) => {
   try {
     const { paymentId, orderId } = req.body;
 
-    // Fetch order
     const [orderRows] = await pool.execute(
       `SELECT * FROM payments WHERE user_id = ? AND order_id = ? AND paid_amount = 0`,
       [req.user.id, orderId]
@@ -123,7 +127,6 @@ exports.capturePayment = async (req, res) => {
 
     const order = orderRows[0];
 
-    // Parallel DB queries for user, student, project, team
     const [
       [userRows], [studentRows], [projectRows], [teamRows]
     ] = await Promise.all([
@@ -138,7 +141,6 @@ exports.capturePayment = async (req, res) => {
     const project = projectRows[0];
     const team = teamRows[0];
 
-    // Validate Razorpay payment
     const payment = await razorpay.payments.fetch(paymentId);
     if (!['authorized', 'captured'].includes(payment.status)) {
       return res.status(400).json({ success: false, message: `Invalid payment status: ${payment.status}` });
@@ -152,17 +154,14 @@ exports.capturePayment = async (req, res) => {
     const paidAmount = capturedPayment.amount / 100;
     const method = capturedPayment.method || 'unknown';
 
-    // Invoice paths
     const logoPath = path.join(__dirname, '..', '..', 'assets', 'logo.png');
     const signatureImagePath = path.join(__dirname, '..', '..', 'assets', 'signature.png');
 
-    // Total paid so far for the project
     const [[{ total_paid: totalPaidBefore = 0 }]] = await pool.execute(
       `SELECT SUM(paid_amount) AS total_paid FROM payments WHERE project_id = ? AND payment_status = 'success'`,
       [order.project_id]
     );
 
-    // Generate invoice
     const invoiceData = {
       bussinessInfo: {
         name: 'HUGU TECHNOLOGIES',
@@ -209,19 +208,16 @@ exports.capturePayment = async (req, res) => {
       [paidAmount, method, invoiceUrl, paymentId, order.payment_id]
     );
 
-    // Recalculate total paid after this payment
     const [[{ total_paid: totalPaidNow = 0 }]] = await pool.execute(
       `SELECT SUM(paid_amount) AS total_paid FROM payments WHERE project_id = ? AND payment_status = 'success'`,
       [order.project_id]
     );
 
-    // Get total project amount
     const [[{ total_amount: totalAmount }]] = await pool.execute(
       `SELECT total_amount FROM projects WHERE project_id = ?`,
       [order.project_id]
     );
 
-    // Update project payment status
     const newStatus = totalPaidNow >= totalAmount
       ? 'paid'
       : totalPaidNow > 0
@@ -233,7 +229,6 @@ exports.capturePayment = async (req, res) => {
       [newStatus, order.project_id]
     );
 
-    // Send confirmation email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -256,7 +251,6 @@ exports.capturePayment = async (req, res) => {
       `
     });
 
-    // Final response
     res.status(200).json({
       success: true,
       message: 'Payment captured successfully',
@@ -291,7 +285,6 @@ const generateAndSaveInvoice = async ({ paymentId, userId, projectId, amount, st
   const doc = new PDFDocument({ size: 'A4', margin: 50 });
   doc.pipe(fs.createWriteStream(invoicePath));
 
-  // Add watermark if exists
   const watermarkPath = path.join(__dirname, '..', '..', 'assets', 'watermark.png');
   if (fs.existsSync(watermarkPath)) {
     doc.image(watermarkPath, 150, 200, {
@@ -302,13 +295,11 @@ const generateAndSaveInvoice = async ({ paymentId, userId, projectId, amount, st
     });
   }
 
-  // Add logo if exists
   const logoPath = path.join(__dirname, '..', '..', 'assets', 'logo.png');
   if (fs.existsSync(logoPath)) {
     doc.image(logoPath, 50, 30, { width: 100 });
   }
 
-  // Invoice content
   doc.fontSize(22)
      .text('Payment Invoice', 50, 130)
      .moveDown();
@@ -328,6 +319,7 @@ const generateAndSaveInvoice = async ({ paymentId, userId, projectId, amount, st
   return `/uploads/invoices/${invoiceFileName}`;
 };
 
+//fetch user payments
 exports.getUserDashboardPayments = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -386,6 +378,7 @@ exports.getUserDashboardPayments = async (req, res) => {
   }
 };
 
+//fetch project invoices
 exports.getProjectInvoices = async (req, res) => {
   try {
     const userId = req.user.id;

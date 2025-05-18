@@ -7,6 +7,8 @@ const fs = require('fs');
 const mysql = require('mysql2/promise');
 const pool = require("../config/db");
 
+
+//upload certificate
 exports.uploadCertificate = async (req, res) => {
   console.log("Certificate is generating...");
   try {
@@ -89,6 +91,8 @@ exports.uploadCertificate = async (req, res) => {
   }
 };
 
+
+//fetch certificates by id
 exports.getCertificateById = async (req, res) => {
   const { certificateId } = req.params;
   try {
